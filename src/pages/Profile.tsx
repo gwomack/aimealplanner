@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useAuth } from "@/contexts/AuthProvider"
@@ -125,22 +124,22 @@ export default function Profile() {
   }
 
   return (
-    <div className="container max-w-2xl py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
+    <div className="container max-w-2xl py-4">
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Profile Settings</CardTitle>
           <CardDescription>
             Manage your account settings and set your preferences.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-1.5">
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input {...field} type="email" />
@@ -154,7 +153,7 @@ export default function Profile() {
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-1.5">
                     <FormLabel>Username</FormLabel>
                     <FormControl>
                       <Input {...field} />
@@ -164,13 +163,13 @@ export default function Profile() {
                 )}
               />
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="text-sm font-medium">Change Password</div>
                 <FormField
                   control={form.control}
                   name="currentPassword"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-1.5">
                       <FormLabel>Current Password</FormLabel>
                       <FormControl>
                         <Input {...field} type="password" />
@@ -184,7 +183,7 @@ export default function Profile() {
                   control={form.control}
                   name="newPassword"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-1.5">
                       <FormLabel>New Password</FormLabel>
                       <FormControl>
                         <Input {...field} type="password" />
@@ -195,7 +194,7 @@ export default function Profile() {
                 />
               </div>
 
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} className="mt-2">
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
             </form>
