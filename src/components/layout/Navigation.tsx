@@ -5,7 +5,7 @@ import { CalendarDays, Plus, Settings, UserCircle2 } from "lucide-react"
 const navigation = [
   {
     title: "Meal Plans",
-    path: "/",
+    path: "/plans",
     icon: CalendarDays,
   },
   {

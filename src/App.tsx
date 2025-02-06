@@ -9,6 +9,7 @@ import RootLayout from "./components/layout/RootLayout"
 import WeeklyMealPlans from "./pages/WeeklyMealPlans"
 import Auth from "./pages/Auth"
 import NotFound from "./pages/NotFound"
+import Index from "./pages/Index"
 
 const queryClient = new QueryClient()
 
@@ -20,9 +21,10 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route element={<RootLayout />}>
-              <Route index element={<WeeklyMealPlans />} />
+              <Route path="/plans" element={<WeeklyMealPlans />} />
               <Route path="/generate" element={<WeeklyMealPlans />} />
               <Route path="/profile" element={<WeeklyMealPlans />} />
               <Route path="/settings" element={<WeeklyMealPlans />} />
