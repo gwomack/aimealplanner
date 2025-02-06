@@ -26,6 +26,10 @@ interface DynamicIngredientInputProps {
   ingredientColumn?: string
 }
 
+type IngredientRecord = {
+  [key: string]: string
+}
+
 export function DynamicIngredientInput({
   form,
   fieldName,
@@ -67,7 +71,7 @@ export function DynamicIngredientInput({
 
     const { data, error } = await supabase
       .from(tableName)
-      .select(ingredientColumn)
+      .select<string, IngredientRecord>(ingredientColumn)
       .eq("user_id", session.user.id)
 
     if (error) {
