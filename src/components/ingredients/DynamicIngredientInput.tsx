@@ -66,9 +66,11 @@ export function DynamicIngredientInput({
   const fetchIngredients = async () => {
     if (!session?.user.id) return
 
+    type TableRow = Database["public"]["Tables"][typeof tableName]["Row"]
+    
     const { data, error } = await supabase
       .from(tableName)
-      .select()
+      .select<'*', TableRow>('*')
       .eq("user_id", session.user.id)
 
     if (error) {
@@ -78,7 +80,7 @@ export function DynamicIngredientInput({
         description: error.message,
       })
     } else if (data) {
-      const ingredients = data.map(item => (item as Record<string, any>)[ingredientColumn] as string)
+      const ingredients = data.map(item => String(item[ingredientColumn]))
       setIngredientsList(ingredients)
       form.setValue(fieldName, ingredients)
     }
@@ -94,13 +96,15 @@ export function DynamicIngredientInput({
       const newIngredient = currentIngredient.trim().toLowerCase()
       
       if (newIngredient && !ingredientsList.includes(newIngredient)) {
+        type TableInsert = Database["public"]["Tables"][typeof tableName]["Insert"]
+        
         try {
           const { error } = await supabase
             .from(tableName)
-            .insert({
+            .insert<TableInsert>({
               user_id: session?.user.id,
               [ingredientColumn]: newIngredient,
-            })
+            } as TableInsert)
 
           if (error) throw error
 
@@ -134,7 +138,6 @@ export function DynamicIngredientInput({
       setIngredientsList(updatedIngredients)
       form.setValue(fieldName, updatedIngredients)
 
-      // Show success toast
       toast({
         title: "Success",
         description: "Ingredient removed successfully",
