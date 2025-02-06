@@ -14,12 +14,15 @@ import {
 import { UseFormReturn } from "react-hook-form"
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
+import { Database } from "@/integrations/supabase/types"
+
+type TableNames = keyof Database["public"]["Tables"]
 
 interface DynamicIngredientInputProps {
   form: UseFormReturn<any>
   fieldName: string
   label: string
-  tableName: string
+  tableName: TableNames
   ingredientColumn?: string
 }
 
