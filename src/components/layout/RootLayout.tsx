@@ -2,10 +2,11 @@
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarInset } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, Plus, LineChart, UserCircle2 } from "lucide-react"
+import { LogOut } from "lucide-react"
 import Navigation from "./Navigation"
+import { Outlet } from "react-router-dom"
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout() {
   return (
     <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full">
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Button>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+          <Outlet />
+        </SidebarInset>
       </div>
     </SidebarProvider>
   )
