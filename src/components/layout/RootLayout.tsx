@@ -9,6 +9,14 @@ import { Outlet } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useToast } from "@/components/ui/use-toast"
 import { useQuery } from "@tanstack/react-query"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function RootLayout() {
   const navigate = useNavigate()
@@ -71,22 +79,23 @@ export default function RootLayout() {
           {/* Navigation Links */}
           <Navigation />
 
-          {/* User Profile & Action Buttons */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-secondary">
-              <User className="h-4 w-4" />
-              <span>{profile?.username || "User"}</span>
-            </div>
-            <Button 
-              variant="outline" 
-              className="text-secondary hover:text-foreground" 
-              size="sm"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
+          {/* User Profile Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span>{profile?.username || "User"}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -97,4 +106,3 @@ export default function RootLayout() {
     </div>
   )
 }
-
