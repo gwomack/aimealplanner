@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthProvider"
 import RootLayout from "./components/layout/RootLayout"
 import WeeklyMealPlans from "./pages/WeeklyMealPlans"
 import CreatePlan from "./pages/CreatePlan"
+import Profile from "./pages/Profile"
 import Auth from "./pages/Auth"
 import NotFound from "./pages/NotFound"
 import Index from "./pages/Index"
@@ -27,6 +28,7 @@ const App = () => (
             <Route element={<RootLayout />}>
               <Route path="/plans" element={<WeeklyMealPlans />} />
               <Route path="/generate" element={<CreatePlan />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
