@@ -6,6 +6,7 @@ import { z } from "zod"
 import { useMutation } from "@tanstack/react-query"
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Form,
   FormControl,
@@ -25,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/contexts/AuthProvider"
 
 const formSchema = z.object({
+  name: z.string().min(1, "Name is required"),
   dietType: z.enum([
     "Anything",
     "Vegetarian",
@@ -47,6 +49,7 @@ export function CreatePlanForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       dietType: "Anything",
       healthGoal: "eat healthy",
       mealsPerDay: "3",
@@ -61,7 +64,7 @@ export function CreatePlanForm() {
       const { data: weeklyPlan, error: weeklyPlanError } = await supabase
         .from("weekly_meal_plans")
         .insert({
-          name: `${values.dietType} Plan - ${new Date().toLocaleDateString()}`,
+          name: values.name,
           user_id: session.user.id,
         })
         .select()
@@ -106,6 +109,20 @@ export function CreatePlanForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Plan Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter plan name" {...field} className="bg-popover" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="dietType"
