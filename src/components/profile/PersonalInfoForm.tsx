@@ -138,16 +138,16 @@ export function PersonalInfoForm() {
       if (personalError) throw personalError
 
       // Handle excluded ingredients
+      // Delete existing excluded ingredients for this user
+      const { error: deleteError } = await supabase
+        .from("excluded_ingredients")
+        .delete()
+        .eq("user_id", session.user.id)
+
+      if (deleteError) throw deleteError
+
+      // Only insert new excluded ingredients if there are any
       if (excludedIngredientsList.length > 0) {
-        // Delete existing excluded ingredients for this user
-        const { error: deleteError } = await supabase
-          .from("excluded_ingredients")
-          .delete()
-          .eq("user_id", session.user.id)
-
-        if (deleteError) throw deleteError
-
-        // Insert new excluded ingredients
         const { error: excludeError } = await supabase
           .from("excluded_ingredients")
           .insert(
