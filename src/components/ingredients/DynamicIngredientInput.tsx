@@ -63,10 +63,23 @@ export function DynamicIngredientInput({
   const fetchIngredients = async () => {
     if (!session?.user.id) return
 
-    const { data, error } = await supabase
+    let query = supabase
       .from(tableName)
       .select('*')
-      .eq("user_id", session.user.id)
+
+    if (tableName === 'weekly_meal_plan_ingredients') {
+      query = query
+        .select(`
+          ingredient_id (
+            name
+          )
+        `)
+        .eq('user_id', session.user.id)
+    } else {
+      query = query.eq('user_id', session.user.id)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       toast({
@@ -75,7 +88,12 @@ export function DynamicIngredientInput({
         description: error.message,
       })
     } else if (data) {
-      const ingredients = data.map(row => String(row[ingredientColumn]))
+      let ingredients: string[]
+      if (tableName === 'weekly_meal_plan_ingredients') {
+        ingredients = data.map(row => row.ingredient_id.name)
+      } else {
+        ingredients = data.map(row => String(row[ingredientColumn]))
+      }
       setIngredientsList(ingredients)
       form.setValue(fieldName, ingredients)
     }
@@ -91,17 +109,53 @@ export function DynamicIngredientInput({
       const newIngredient = currentIngredient.trim().toLowerCase()
       
       if (newIngredient && !ingredientsList.includes(newIngredient)) {
-        const insertData = {
-          user_id: session?.user.id,
-          [ingredientColumn]: newIngredient,
-        }
-
         try {
-          const { error } = await supabase
-            .from(tableName)
-            .insert(insertData)
+          if (tableName === 'weekly_meal_plan_ingredients') {
+            // First, check if ingredient exists or create it
+            const { data: existingIngredient } = await supabase
+              .from('ingredients')
+              .select('id')
+              .eq('name', newIngredient)
+              .maybeSingle()
 
-          if (error) throw error
+            let ingredientId
+            if (!existingIngredient) {
+              const { data: newIngredient, error: ingredientError } = await supabase
+                .from('ingredients')
+                .insert({
+                  name: newIngredient,
+                  created_by: session?.user.id,
+                })
+                .select()
+                .single()
+
+              if (ingredientError) throw ingredientError
+              ingredientId = newIngredient.id
+            } else {
+              ingredientId = existingIngredient.id
+            }
+
+            // Then insert into weekly_meal_plan_ingredients
+            const { error } = await supabase
+              .from(tableName)
+              .insert({
+                ingredient_id: ingredientId,
+                user_id: session?.user.id,
+              })
+
+            if (error) throw error
+          } else {
+            const insertData = {
+              user_id: session?.user.id,
+              [ingredientColumn]: newIngredient,
+            }
+
+            const { error } = await supabase
+              .from(tableName)
+              .insert(insertData)
+
+            if (error) throw error
+          }
 
           setCurrentIngredient("")
         } catch (error: any) {
@@ -119,13 +173,33 @@ export function DynamicIngredientInput({
     if (!session?.user.id) return
 
     try {
-      const { error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq("user_id", session.user.id)
-        .eq(ingredientColumn, ingredientToRemove)
+      if (tableName === 'weekly_meal_plan_ingredients') {
+        // First get the ingredient ID
+        const { data: ingredient } = await supabase
+          .from('ingredients')
+          .select('id')
+          .eq('name', ingredientToRemove)
+          .single()
 
-      if (error) throw error
+        if (!ingredient) throw new Error('Ingredient not found')
+
+        // Then delete from weekly_meal_plan_ingredients
+        const { error } = await supabase
+          .from(tableName)
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('ingredient_id', ingredient.id)
+
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from(tableName)
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq(ingredientColumn, ingredientToRemove)
+
+        if (error) throw error
+      }
 
       const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
       setIngredientsList(updatedIngredients)
