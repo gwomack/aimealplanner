@@ -26,10 +26,6 @@ interface DynamicIngredientInputProps {
   ingredientColumn?: string
 }
 
-type IngredientData = {
-  ingredient: string
-}
-
 export function DynamicIngredientInput({
   form,
   fieldName,
@@ -71,7 +67,7 @@ export function DynamicIngredientInput({
 
     const { data, error } = await supabase
       .from(tableName)
-      .select<string, Database['public']['Tables'][TableNames]['Row']>(ingredientColumn)
+      .select(`${ingredientColumn}`)
       .eq("user_id", session.user.id)
 
     if (error) {
@@ -81,7 +77,7 @@ export function DynamicIngredientInput({
         description: error.message,
       })
     } else if (data) {
-      const ingredients = data.map((item: any) => item[ingredientColumn])
+      const ingredients = data.map(item => item[ingredientColumn] as string)
       setIngredientsList(ingredients)
       form.setValue(fieldName, ingredients)
     }
@@ -132,8 +128,9 @@ export function DynamicIngredientInput({
 
       if (error) throw error
 
-      // Update form value
+      // Update local state
       const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
+      setIngredientsList(updatedIngredients)
       form.setValue(fieldName, updatedIngredients)
     } catch (error: any) {
       toast({
