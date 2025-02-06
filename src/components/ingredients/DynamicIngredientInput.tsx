@@ -16,13 +16,11 @@ import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
 import { Database } from "@/integrations/supabase/types"
 
-type TableNames = keyof Database["public"]["Tables"]
-
 interface DynamicIngredientInputProps {
   form: UseFormReturn<any>
   fieldName: string
   label: string
-  tableName: TableNames
+  tableName: keyof Database["public"]["Tables"]
   ingredientColumn?: string
 }
 
@@ -41,7 +39,6 @@ export function DynamicIngredientInput({
   useEffect(() => {
     if (!session?.user.id) return
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -66,11 +63,9 @@ export function DynamicIngredientInput({
   const fetchIngredients = async () => {
     if (!session?.user.id) return
 
-    type TableRow = Database["public"]["Tables"][typeof tableName]["Row"]
-    
     const { data, error } = await supabase
       .from(tableName)
-      .select<'*', TableRow>('*')
+      .select('*')
       .eq("user_id", session.user.id)
 
     if (error) {
@@ -80,7 +75,7 @@ export function DynamicIngredientInput({
         description: error.message,
       })
     } else if (data) {
-      const ingredients = data.map(item => String(item[ingredientColumn]))
+      const ingredients = data.map(row => String(row[ingredientColumn]))
       setIngredientsList(ingredients)
       form.setValue(fieldName, ingredients)
     }
@@ -96,19 +91,18 @@ export function DynamicIngredientInput({
       const newIngredient = currentIngredient.trim().toLowerCase()
       
       if (newIngredient && !ingredientsList.includes(newIngredient)) {
-        type TableInsert = Database["public"]["Tables"][typeof tableName]["Insert"]
-        
+        const insertData = {
+          user_id: session?.user.id,
+          [ingredientColumn]: newIngredient,
+        }
+
         try {
           const { error } = await supabase
             .from(tableName)
-            .insert<TableInsert>({
-              user_id: session?.user.id,
-              [ingredientColumn]: newIngredient,
-            } as TableInsert)
+            .insert(insertData)
 
           if (error) throw error
 
-          // Clear input after successful insertion
           setCurrentIngredient("")
         } catch (error: any) {
           toast({
@@ -133,7 +127,6 @@ export function DynamicIngredientInput({
 
       if (error) throw error
 
-      // Immediately update local state to reflect removal
       const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
       setIngredientsList(updatedIngredients)
       form.setValue(fieldName, updatedIngredients)

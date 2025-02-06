@@ -1,8 +1,7 @@
 
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
 import { UseFormReturn } from "react-hook-form"
 import { MealPlanFormData } from "@/hooks/useMealPlanMutation"
+import { DynamicIngredientInput } from "@/components/ingredients/DynamicIngredientInput"
 
 interface IngredientsFieldProps {
   form: UseFormReturn<MealPlanFormData>
@@ -10,22 +9,12 @@ interface IngredientsFieldProps {
 
 export function IngredientsField({ form }: IngredientsFieldProps) {
   return (
-    <FormField
-      control={form.control}
-      name="ingredients"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Ingredients</FormLabel>
-          <FormControl>
-            <Input
-              placeholder="Type ingredients separated by commas"
-              {...field}
-              className="bg-popover"
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+    <DynamicIngredientInput
+      form={form}
+      fieldName="ingredients"
+      label="Ingredients"
+      tableName="weekly_meal_plan_ingredients"
+      ingredientColumn="ingredient_id"
     />
   )
 }
