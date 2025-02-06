@@ -1,0 +1,207 @@
+
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { useAuth } from "@/contexts/AuthProvider"
+import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { useQuery } from "@tanstack/react-query"
+
+interface ProfileFormValues {
+  email: string
+  username: string
+  currentPassword: string
+  newPassword: string
+}
+
+export default function Profile() {
+  const { session } = useAuth()
+  const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+
+  const form = useForm<ProfileFormValues>({
+    defaultValues: {
+      email: session?.user?.email || "",
+      username: "",
+      currentPassword: "",
+      newPassword: "",
+    },
+  })
+
+  // Fetch current profile data
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", session?.user.id)
+        .single()
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching profile",
+          description: error.message,
+        })
+        return null
+      }
+
+      if (data) {
+        form.setValue("username", data.username || "")
+      }
+
+      return data
+    },
+    enabled: !!session,
+  })
+
+  const onSubmit = async (data: ProfileFormValues) => {
+    setLoading(true)
+
+    try {
+      // Update email if changed
+      if (data.email !== session?.user?.email) {
+        const { error: emailError } = await supabase.auth.updateUser({
+          email: data.email,
+        })
+
+        if (emailError) throw emailError
+      }
+
+      // Update username if changed
+      if (data.username !== profile?.username) {
+        const { error: usernameError } = await supabase
+          .from("profiles")
+          .update({ username: data.username })
+          .eq("id", session?.user.id)
+
+        if (usernameError) throw usernameError
+      }
+
+      // Update password if provided
+      if (data.currentPassword && data.newPassword) {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: data.newPassword,
+        })
+
+        if (passwordError) throw passwordError
+      }
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      })
+
+      // Reset password fields
+      form.setValue("currentPassword", "")
+      form.setValue("newPassword", "")
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error updating profile",
+        description: error.message,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="container max-w-2xl py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Settings</CardTitle>
+          <CardDescription>
+            Manage your account settings and set your preferences.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-4">
+                <div className="text-sm font-medium">Change Password</div>
+                <FormField
+                  control={form.control}
+                  name="currentPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Current Password</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New Password</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
