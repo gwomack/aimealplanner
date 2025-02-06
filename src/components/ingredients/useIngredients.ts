@@ -22,7 +22,20 @@ export function useIngredients(
     if (!session?.user.id) return
 
     try {
-      if (tableName === 'weekly_meal_plan_ingredients') {
+      if (tableName === 'excluded_ingredients') {
+        const { data, error } = await supabase
+          .from('excluded_ingredients')
+          .select('ingredient')
+          .eq('user_id', session.user.id)
+
+        if (error) throw error
+
+        if (data) {
+          const ingredients = data.map(row => row.ingredient)
+          setIngredientsList(ingredients)
+          form.setValue(fieldName, ingredients.join(','))
+        }
+      } else if (tableName === 'weekly_meal_plan_ingredients') {
         const { data, error } = await supabase
           .from('weekly_meal_plan_ingredients')
           .select(`
@@ -35,18 +48,6 @@ export function useIngredients(
 
         if (data) {
           const ingredients = data.map(row => row.ingredient_id.name)
-          setIngredientsList(ingredients)
-          form.setValue(fieldName, ingredients.join(','))
-        }
-      } else {
-        const { data, error } = await supabase
-          .from(tableName)
-          .select()
-
-        if (error) throw error
-
-        if (data) {
-          const ingredients = data.map(row => String(row[ingredientColumn]))
           setIngredientsList(ingredients)
           form.setValue(fieldName, ingredients.join(','))
         }
@@ -97,33 +98,42 @@ export function useIngredients(
       if (newIngredientName && !ingredientsList.includes(newIngredientName)) {
         if (realtime) {
           try {
-            const { data: existingIngredient, error: checkError } = await supabase
-              .from('ingredients')
-              .select('id')
-              .eq('name', newIngredientName)
-              .maybeSingle()
-
-            if (checkError) throw checkError
-
-            let ingredientId: string
-
-            if (!existingIngredient) {
-              const { data: newIngredientData, error: createError } = await supabase
-                .from('ingredients')
+            if (tableName === 'excluded_ingredients') {
+              const { error } = await supabase
+                .from('excluded_ingredients')
                 .insert({
-                  name: newIngredientName,
-                  created_by: session?.user.id as string,
+                  ingredient: newIngredientName,
+                  user_id: session?.user.id as string,
                 })
+
+              if (error) throw error
+            } else if (tableName === 'weekly_meal_plan_ingredients') {
+              const { data: existingIngredient, error: checkError } = await supabase
+                .from('ingredients')
                 .select('id')
-                .single()
+                .eq('name', newIngredientName)
+                .maybeSingle()
 
-              if (createError) throw createError
-              ingredientId = newIngredientData.id
-            } else {
-              ingredientId = existingIngredient.id
-            }
+              if (checkError) throw checkError
 
-            if (tableName === 'weekly_meal_plan_ingredients') {
+              let ingredientId: string
+
+              if (!existingIngredient) {
+                const { data: newIngredientData, error: createError } = await supabase
+                  .from('ingredients')
+                  .insert({
+                    name: newIngredientName,
+                    created_by: session?.user.id as string,
+                  })
+                  .select('id')
+                  .single()
+
+                if (createError) throw createError
+                ingredientId = newIngredientData.id
+              } else {
+                ingredientId = existingIngredient.id
+              }
+
               const { error: relationError } = await supabase
                 .from('weekly_meal_plan_ingredients')
                 .insert({
@@ -158,7 +168,15 @@ export function useIngredients(
 
     if (realtime) {
       try {
-        if (tableName === 'weekly_meal_plan_ingredients') {
+        if (tableName === 'excluded_ingredients') {
+          const { error } = await supabase
+            .from('excluded_ingredients')
+            .delete()
+            .eq('ingredient', ingredientToRemove)
+            .eq('user_id', session.user.id)
+
+          if (error) throw error
+        } else if (tableName === 'weekly_meal_plan_ingredients') {
           const { data: ingredient, error: findError } = await supabase
             .from('ingredients')
             .select('id')
@@ -175,13 +193,6 @@ export function useIngredients(
             .eq('weekly_plan_id', form.getValues().weekly_plan_id)
 
           if (deleteError) throw deleteError
-        } else {
-          const { error } = await supabase
-            .from(tableName)
-            .delete()
-            .eq(ingredientColumn, ingredientToRemove)
-
-          if (error) throw error
         }
 
         await fetchIngredients()

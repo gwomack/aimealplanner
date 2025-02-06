@@ -13,6 +13,8 @@ export function ExcludedIngredientsForm({ form }: ExcludedIngredientsFormProps) 
       fieldName="excludedIngredients"
       label="Excluded Ingredients"
       tableName="excluded_ingredients"
+      ingredientColumn="ingredient"
+      realtime={true}
     />
   )
 }
