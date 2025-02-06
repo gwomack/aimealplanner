@@ -71,7 +71,7 @@ export function PersonalDetailsForm({ form }: PersonalDetailsFormProps) {
         render={({ field }) => (
           <FormItem className="space-y-1.5">
             <FormLabel>Sex</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || ""}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select your sex" />
