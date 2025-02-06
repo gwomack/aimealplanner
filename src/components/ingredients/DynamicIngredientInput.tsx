@@ -17,6 +17,7 @@ import { X } from "lucide-react"
 import { Database } from "@/integrations/supabase/types"
 
 type TableNames = keyof Database["public"]["Tables"]
+type IngredientRecord = { [key: string]: string }
 
 interface DynamicIngredientInputProps {
   form: UseFormReturn<any>
@@ -41,6 +42,7 @@ export function DynamicIngredientInput({
   useEffect(() => {
     if (!session?.user.id) return
 
+    // Set up real-time subscription
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -67,7 +69,7 @@ export function DynamicIngredientInput({
 
     const { data, error } = await supabase
       .from(tableName)
-      .select(`${ingredientColumn}`)
+      .select<"*", IngredientRecord>()
       .eq("user_id", session.user.id)
 
     if (error) {
@@ -128,10 +130,7 @@ export function DynamicIngredientInput({
 
       if (error) throw error
 
-      // Update local state
-      const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
-      setIngredientsList(updatedIngredients)
-      form.setValue(fieldName, updatedIngredients)
+      // Local state update will happen through the real-time subscription
     } catch (error: any) {
       toast({
         variant: "destructive",
