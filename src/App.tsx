@@ -28,7 +28,6 @@ const App = () => (
               <Route path="/plans" element={<WeeklyMealPlans />} />
               <Route path="/generate" element={<WeeklyMealPlans />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<WeeklyMealPlans />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
