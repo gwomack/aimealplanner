@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/contexts/AuthProvider"
+import { ExcludedIngredientsForm } from "@/components/profile/ExcludedIngredientsForm"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -39,6 +40,7 @@ const formSchema = z.object({
   ]),
   healthGoal: z.enum(["build muscle", "lose weight", "eat healthy"]),
   mealsPerDay: z.enum(["2", "3", "4", "5", "6"]),
+  excludedIngredients: z.array(z.string()).optional(),
 })
 
 export function CreatePlanForm() {
@@ -53,6 +55,7 @@ export function CreatePlanForm() {
       dietType: "Anything",
       healthGoal: "eat healthy",
       mealsPerDay: "3",
+      excludedIngredients: [],
     },
   })
 
@@ -198,6 +201,8 @@ export function CreatePlanForm() {
             </FormItem>
           )}
         />
+
+        <ExcludedIngredientsForm form={form} />
 
         <Button 
           type="submit" 
