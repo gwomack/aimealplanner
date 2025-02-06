@@ -4,7 +4,6 @@ import { UseFormReturn } from "react-hook-form"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useToast } from "@/components/ui/use-toast"
 import { Database } from "@/integrations/supabase/types"
-import { addIngredientToExcluded, addIngredientToWeeklyPlan } from "@/services/ingredientService"
 
 export function useIngredientsAdd(
   form: UseFormReturn<any>,
@@ -24,32 +23,10 @@ export function useIngredientsAdd(
       const newIngredientName = currentIngredient.trim().toLowerCase()
       
       if (newIngredientName && !ingredientsList.includes(newIngredientName)) {
-        try {
-          if (tableName === 'excluded_ingredients') {
-            await addIngredientToExcluded(newIngredientName, session?.user.id as string)
-            setCurrentIngredient("")
-            await fetchIngredients()
-          } else if (tableName === 'weekly_meal_plan_ingredients') {
-            await addIngredientToWeeklyPlan(
-              newIngredientName, 
-              session?.user.id as string,
-              form.getValues().weekly_plan_id
-            )
-            setCurrentIngredient("")
-            await fetchIngredients()
-          } else {
-            const newIngredients = [...ingredientsList, newIngredientName]
-            setIngredientsList(newIngredients)
-            form.setValue(fieldName, newIngredients.join(','))
-            setCurrentIngredient("")
-          }
-        } catch (error: any) {
-          toast({
-            variant: "destructive",
-            title: "Error adding ingredient",
-            description: error.message,
-          })
-        }
+        const newIngredients = [...ingredientsList, newIngredientName]
+        setIngredientsList(newIngredients)
+        form.setValue(fieldName, newIngredients.join(','))
+        setCurrentIngredient("")
       }
     }
   }
