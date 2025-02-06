@@ -54,7 +54,7 @@ export default {
         error: "#F44747",
       },
       fontFamily: {
-        sans: ["Cascadia Code", "Monaco", "Courier New", "monospace"],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         h1: "2rem",

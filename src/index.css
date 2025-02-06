@@ -52,8 +52,8 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   h1 {
