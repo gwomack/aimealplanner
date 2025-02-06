@@ -3,17 +3,9 @@ import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { X } from "lucide-react"
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
 import { UseFormReturn } from "react-hook-form"
+import { IngredientInput } from "./IngredientInput"
+import { IngredientsList } from "./IngredientsList"
 
 interface ExcludedIngredientsFormProps {
   form: UseFormReturn<any>
@@ -25,7 +17,6 @@ export function ExcludedIngredientsForm({ form }: ExcludedIngredientsFormProps) 
   const [currentIngredient, setCurrentIngredient] = useState("")
   const [excludedIngredientsList, setExcludedIngredientsList] = useState<string[]>([])
 
-  // Subscribe to real-time updates for excluded ingredients
   useEffect(() => {
     if (!session?.user.id) return
 
@@ -51,7 +42,6 @@ export function ExcludedIngredientsForm({ form }: ExcludedIngredientsFormProps) 
     }
   }, [session?.user.id])
 
-  // Function to fetch excluded ingredients
   const fetchExcludedIngredients = async () => {
     if (!session?.user.id) return
 
@@ -72,7 +62,6 @@ export function ExcludedIngredientsForm({ form }: ExcludedIngredientsFormProps) 
     }
   }
 
-  // Initial fetch of excluded ingredients
   useEffect(() => {
     fetchExcludedIngredients()
   }, [session?.user.id])
@@ -112,44 +101,15 @@ export function ExcludedIngredientsForm({ form }: ExcludedIngredientsFormProps) 
 
   return (
     <>
-      <FormField
-        control={form.control}
-        name="excludedIngredients"
-        render={() => (
-          <FormItem className="space-y-1.5">
-            <FormLabel>Excluded Ingredients</FormLabel>
-            <FormControl>
-              <Input
-                value={currentIngredient}
-                onChange={handleIngredientInput}
-                placeholder="Type ingredient and press comma to add"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+      <IngredientInput
+        form={form}
+        value={currentIngredient}
+        onChange={handleIngredientInput}
       />
-
-      {excludedIngredientsList.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {excludedIngredientsList.map((ingredient, index) => (
-            <Badge
-              key={index}
-              variant="secondary"
-              className="text-sm flex items-center gap-1"
-            >
-              {ingredient}
-              <button
-                type="button"
-                onClick={() => removeIngredient(ingredient)}
-                className="hover:bg-secondary-foreground/10 rounded-full p-1"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      )}
+      <IngredientsList
+        ingredients={excludedIngredientsList}
+        onRemoveIngredient={removeIngredient}
+      />
     </>
   )
 }
