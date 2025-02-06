@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button"
-import { ChefHat, Utensils, Sparkles } from "lucide-react"
+import { Calendar, ChefHat, User2, Utensils, Sparkles, Leaf, ArrowRight } from "lucide-react"
 
 const Index = () => {
   return (
@@ -16,55 +16,90 @@ const Index = () => {
             {/* Hero Content */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted animate-fade-in">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm text-primary">AI-Powered Meal Planning</span>
+              <span className="text-sm text-primary">Transform Your Eating Habits</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-fade-in">
-              Your Personal AI Chef for 
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight animate-fade-in">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+                Eat Healthy Without the Hassle
+              </span>
               <br />
-              Perfect Meal Plans
+              <span className="text-foreground">AI-Powered Meal Plans for Busy Lives</span>
             </h1>
             
             <p className="text-xl text-secondary max-w-2xl mx-auto animate-fade-in">
-              Generate personalized weekly meal plans tailored to your dietary needs, preferences, and available ingredients.
+              Get personalized, easy-to-follow meal plans tailored to your lifestyle, goals, and dietary preferences—all in minutes. Let AI do the planning while you focus on enjoying delicious, healthy meals.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
-              <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-[200px]">
-                <ChefHat className="mr-2 h-5 w-5" />
-                Get Started
+              <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 min-w-[200px] group">
+                Get My Free Meal Plan
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button size="lg" variant="outline" className="min-w-[200px]">
                 <Utensils className="mr-2 h-5 w-5" />
-                View Demo
+                Watch Demo
               </Button>
             </div>
           </div>
           
+          {/* How It Works Section */}
+          <div className="mt-32 text-center">
+            <h2 className="text-3xl font-bold mb-12">How It Works</h2>
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <div className="space-y-4">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <User2 className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold">1. Answer Questions</h3>
+                <p className="text-secondary">Tell us about your goals, allergies, and preferences.</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
+                  <Calendar className="h-6 w-6 text-accent" />
+                </div>
+                <h3 className="text-lg font-semibold">2. Receive Your Plan</h3>
+                <p className="text-secondary">Get a customized weekly meal plan delivered instantly.</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center mx-auto">
+                  <Leaf className="h-6 w-6 text-success" />
+                </div>
+                <h3 className="text-lg font-semibold">3. Enjoy Healthy Meals</h3>
+                <p className="text-secondary">Follow the recipes and shop from our smart grocery list.</p>
+              </div>
+            </div>
+          </div>
+          
           {/* Feature Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mt-20 animate-fade-in">
-            <div className="p-6 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <ChefHat className="h-6 w-6 text-primary" />
+          <div className="mt-32">
+            <h2 className="text-3xl font-bold text-center mb-12">Why Choose Our App?</h2>
+            <div className="grid md:grid-cols-3 gap-6 animate-fade-in">
+              <div className="p-6 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <ChefHat className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">AI-Powered Plans</h3>
+                <p className="text-secondary">Personalized meal plans generated by advanced AI to match your preferences.</p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">AI-Powered Plans</h3>
-              <p className="text-secondary">Personalized meal plans generated by advanced AI to match your preferences.</p>
-            </div>
-            
-            <div className="p-6 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
-              <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
-                <Sparkles className="h-6 w-6 text-accent" />
+              
+              <div className="p-6 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
+                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
+                  <Sparkles className="h-6 w-6 text-accent" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Smart Shopping Lists</h3>
+                <p className="text-secondary">Automatically generated grocery lists that save you time and reduce food waste.</p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Smart Ingredients</h3>
-              <p className="text-secondary">Optimize your grocery shopping with intelligent ingredient suggestions.</p>
-            </div>
-            
-            <div className="p-6 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
-              <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center mb-4">
-                <Utensils className="h-6 w-6 text-success" />
+              
+              <div className="p-6 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
+                <div className="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center mb-4">
+                  <Utensils className="h-6 w-6 text-success" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Quick & Easy Recipes</h3>
+                <p className="text-secondary">Simple, delicious recipes designed for busy schedules and all skill levels.</p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Balanced Nutrition</h3>
-              <p className="text-secondary">Get perfectly balanced meals that meet your nutritional goals.</p>
             </div>
           </div>
         </div>
