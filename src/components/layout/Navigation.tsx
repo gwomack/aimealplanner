@@ -1,6 +1,6 @@
 
 import { NavLink } from "react-router-dom"
-import { CalendarDays, Plus, Settings, UserCircle2 } from "lucide-react"
+import { CalendarDays, Plus, Settings } from "lucide-react"
 
 const navigation = [
   {
@@ -12,11 +12,6 @@ const navigation = [
     title: "Create Plan",
     path: "/generate",
     icon: Plus,
-  },
-  {
-    title: "Profile",
-    path: "/profile",
-    icon: UserCircle2,
   },
   {
     title: "Settings",

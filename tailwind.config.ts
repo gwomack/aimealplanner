@@ -49,6 +49,10 @@ export default {
           DEFAULT: "#141414",
           foreground: "#FAFAFA",
         },
+        popover: {
+          DEFAULT: "#1E1E1E", // Added darker background for dropdowns
+          foreground: "#FAFAFA",
+        },
         success: "#6A9955",
         warning: "#CE9178",
         error: "#F44747",
