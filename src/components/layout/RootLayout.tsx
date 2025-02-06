@@ -2,10 +2,31 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { supabase } from "@/integrations/supabase/client"
 import Navigation from "./Navigation"
 import { Outlet } from "react-router-dom"
+import { useAuth } from "@/contexts/AuthProvider"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function RootLayout() {
+  const navigate = useNavigate()
+  const { session } = useAuth()
+  const { toast } = useToast()
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error signing out",
+        description: error.message,
+      })
+    } else {
+      navigate("/auth")
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col w-full bg-background">
       {/* Top Navigation Bar */}
@@ -27,7 +48,12 @@ export default function RootLayout() {
           <Navigation />
 
           {/* Action Buttons */}
-          <Button variant="outline" className="text-secondary hover:text-foreground" size="sm">
+          <Button 
+            variant="outline" 
+            className="text-secondary hover:text-foreground" 
+            size="sm"
+            onClick={handleLogout}
+          >
             <LogOut className="mr-2 h-4 w-4" />
             Logout
           </Button>
