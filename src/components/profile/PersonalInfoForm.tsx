@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useToast } from "@/components/ui/use-toast"
@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { X } from "lucide-react"
 import {
   Form,
   FormControl,
@@ -36,6 +37,7 @@ export function PersonalInfoForm() {
   const { session } = useAuth()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [currentIngredient, setCurrentIngredient] = useState("")
   const [excludedIngredientsList, setExcludedIngredientsList] = useState<string[]>([])
 
   const form = useForm<PersonalInfoFormValues>({
@@ -98,6 +100,26 @@ export function PersonalInfoForm() {
     enabled: !!session,
   })
 
+  const handleIngredientInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setCurrentIngredient(value)
+
+    // If comma or enter is pressed, add the ingredient
+    if (value.endsWith(",")) {
+      const newIngredient = value.slice(0, -1).trim().toLowerCase()
+      if (newIngredient && !excludedIngredientsList.includes(newIngredient)) {
+        setExcludedIngredientsList([...excludedIngredientsList, newIngredient])
+      }
+      setCurrentIngredient("")
+    }
+  }
+
+  const removeIngredient = (ingredientToRemove: string) => {
+    setExcludedIngredientsList(
+      excludedIngredientsList.filter((ing) => ing !== ingredientToRemove)
+    )
+  }
+
   const onSubmit = async (data: PersonalInfoFormValues) => {
     setLoading(true)
 
@@ -116,57 +138,62 @@ export function PersonalInfoForm() {
       if (personalError) throw personalError
 
       // Handle excluded ingredients
-      if (data.excludedIngredients) {
-        const ingredients = data.excludedIngredients
-          .split(",")
-          .map((i) => i.trim())
-          .filter((i) => i)
+      if (excludedIngredientsList.length > 0) {
+        // First, get all existing ingredients to avoid duplicates
+        const { data: existingIngredients, error: existingError } = await supabase
+          .from("ingredients")
+          .select("id, name")
+          .in("name", excludedIngredientsList)
 
-        // First, insert new ingredients if they don't exist
-        for (const ingredient of ingredients) {
-          const { data: existingIngredient } = await supabase
+        if (existingError) throw existingError
+
+        const existingNames = existingIngredients.map(ing => ing.name)
+        const newIngredients = excludedIngredientsList.filter(
+          ing => !existingNames.includes(ing)
+        )
+
+        // Insert new ingredients
+        let allIngredientIds = [...existingIngredients]
+        if (newIngredients.length > 0) {
+          const { data: newIngredientsData, error: insertError } = await supabase
             .from("ingredients")
-            .select("id")
-            .eq("name", ingredient.toLowerCase())
-            .maybeSingle()
-
-          let ingredientId = existingIngredient?.id
-
-          if (!ingredientId) {
-            const { data: newIngredient, error: insertError } = await supabase
-              .from("ingredients")
-              .insert({
-                name: ingredient.toLowerCase(),
+            .insert(
+              newIngredients.map(name => ({
+                name,
                 created_by: session?.user.id,
-              })
-              .select("id")
-              .single()
+              }))
+            )
+            .select("id, name")
 
-            if (insertError) throw insertError
-            ingredientId = newIngredient.id
-          }
-
-          // Insert excluded ingredient
-          const { error: excludeError } = await supabase
-            .from("excluded_ingredients")
-            .upsert({
-              user_id: session?.user.id,
-              ingredient_id: ingredientId,
-            })
-
-          if (excludeError) throw excludeError
+          if (insertError) throw insertError
+          allIngredientIds = [...allIngredientIds, ...newIngredientsData]
         }
 
-        setExcludedIngredientsList(ingredients)
+        // Delete existing excluded ingredients for this user
+        const { error: deleteError } = await supabase
+          .from("excluded_ingredients")
+          .delete()
+          .eq("user_id", session?.user.id)
+
+        if (deleteError) throw deleteError
+
+        // Insert new excluded ingredients
+        const { error: excludeError } = await supabase
+          .from("excluded_ingredients")
+          .insert(
+            allIngredientIds.map(ing => ({
+              user_id: session?.user.id,
+              ingredient_id: ing.id,
+            }))
+          )
+
+        if (excludeError) throw excludeError
       }
 
       toast({
         title: "Personal information updated",
         description: "Your personal information has been updated successfully.",
       })
-
-      // Clear the excluded ingredients input
-      form.setValue("excludedIngredients", "")
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -251,13 +278,14 @@ export function PersonalInfoForm() {
         <FormField
           control={form.control}
           name="excludedIngredients"
-          render={({ field }) => (
-            <FormItem className="space-y-1.5 col-span-2">
+          render={() => (
+            <FormItem className="space-y-1.5">
               <FormLabel>Excluded Ingredients</FormLabel>
               <FormControl>
                 <Input
-                  {...field}
-                  placeholder="Enter ingredients separated by commas"
+                  value={currentIngredient}
+                  onChange={handleIngredientInput}
+                  placeholder="Type ingredient and press comma to add"
                 />
               </FormControl>
               <FormMessage />
@@ -268,8 +296,19 @@ export function PersonalInfoForm() {
         {excludedIngredientsList.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {excludedIngredientsList.map((ingredient, index) => (
-              <Badge key={index} variant="secondary" className="text-sm">
+              <Badge
+                key={index}
+                variant="secondary"
+                className="text-sm flex items-center gap-1"
+              >
                 {ingredient}
+                <button
+                  type="button"
+                  onClick={() => removeIngredient(ingredient)}
+                  className="hover:bg-secondary-foreground/10 rounded-full p-1"
+                >
+                  <X className="h-3 w-3" />
+                </button>
               </Badge>
             ))}
           </div>
