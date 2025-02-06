@@ -1,18 +1,42 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
+import { LogOut, User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import Navigation from "./Navigation"
 import { Outlet } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useToast } from "@/components/ui/use-toast"
+import { useQuery } from "@tanstack/react-query"
 
 export default function RootLayout() {
   const navigate = useNavigate()
   const { session } = useAuth()
   const { toast } = useToast()
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", session?.user.id)
+        .single()
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching profile",
+          description: error.message,
+        })
+        return null
+      }
+
+      return data
+    },
+    enabled: !!session,
+  })
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut()
@@ -47,16 +71,22 @@ export default function RootLayout() {
           {/* Navigation Links */}
           <Navigation />
 
-          {/* Action Buttons */}
-          <Button 
-            variant="outline" 
-            className="text-secondary hover:text-foreground" 
-            size="sm"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          {/* User Profile & Action Buttons */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-secondary">
+              <User className="h-4 w-4" />
+              <span>{profile?.username || "User"}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              className="text-secondary hover:text-foreground" 
+              size="sm"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -67,3 +97,4 @@ export default function RootLayout() {
     </div>
   )
 }
+
