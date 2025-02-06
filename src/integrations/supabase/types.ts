@@ -110,6 +110,42 @@ export type Database = {
         }
         Relationships: []
       }
+      excluded_ingredients: {
+        Row: {
+          created_at: string
+          id: string
+          ingredient_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ingredient_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ingredient_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "excluded_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "excluded_ingredients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ingredients: {
         Row: {
           created_at: string

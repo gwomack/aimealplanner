@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useAuth } from "@/contexts/AuthProvider"
@@ -5,7 +6,6 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Card,
   CardContent,
@@ -21,6 +21,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
 
 interface ProfileFormValues {
@@ -30,10 +37,18 @@ interface ProfileFormValues {
   newPassword: string
 }
 
+interface PersonalInfoFormValues {
+  age: string
+  weight: string
+  height: string
+  sex: string
+}
+
 export default function Profile() {
   const { session } = useAuth()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [personalInfoLoading, setPersonalInfoLoading] = useState(false)
 
   const form = useForm<ProfileFormValues>({
     defaultValues: {
@@ -41,6 +56,15 @@ export default function Profile() {
       username: "",
       currentPassword: "",
       newPassword: "",
+    },
+  })
+
+  const personalInfoForm = useForm<PersonalInfoFormValues>({
+    defaultValues: {
+      age: "",
+      weight: "",
+      height: "",
+      sex: "",
     },
   })
 
@@ -65,6 +89,38 @@ export default function Profile() {
 
       if (data) {
         form.setValue("username", data.username || "")
+      }
+
+      return data
+    },
+    enabled: !!session,
+  })
+
+  // Fetch personal information
+  const { data: personalInfo } = useQuery({
+    queryKey: ["personal-info"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("personal_information")
+        .select("age, weight, height, sex")
+        .eq("user_id", session?.user.id)
+        .single()
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 means no data found
+        toast({
+          variant: "destructive",
+          title: "Error fetching personal information",
+          description: error.message,
+        })
+        return null
+      }
+
+      if (data) {
+        personalInfoForm.setValue("age", data.age?.toString() || "")
+        personalInfoForm.setValue("weight", data.weight?.toString() || "")
+        personalInfoForm.setValue("height", data.height?.toString() || "")
+        personalInfoForm.setValue("sex", data.sex || "")
       }
 
       return data
@@ -123,8 +179,39 @@ export default function Profile() {
     }
   }
 
+  const onPersonalInfoSubmit = async (data: PersonalInfoFormValues) => {
+    setPersonalInfoLoading(true)
+
+    try {
+      const { error } = await supabase
+        .from("personal_information")
+        .upsert({
+          user_id: session?.user.id,
+          age: parseInt(data.age) || null,
+          weight: parseFloat(data.weight) || null,
+          height: parseFloat(data.height) || null,
+          sex: data.sex || null,
+        })
+
+      if (error) throw error
+
+      toast({
+        title: "Personal information updated",
+        description: "Your personal information has been updated successfully.",
+      })
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error updating personal information",
+        description: error.message,
+      })
+    } finally {
+      setPersonalInfoLoading(false)
+    }
+  }
+
   return (
-    <div className="container max-w-2xl py-4">
+    <div className="container max-w-2xl py-4 space-y-4">
       <Card className="shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">Profile Settings</CardTitle>
@@ -194,8 +281,97 @@ export default function Profile() {
                 />
               </div>
 
-              <Button type="submit" disabled={loading} className="mt-2">
+              <Button type="submit" disabled={loading}>
                 {loading ? "Saving..." : "Save Changes"}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Personal Information</CardTitle>
+          <CardDescription>
+            Update your personal information and dietary preferences.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...personalInfoForm}>
+            <form
+              onSubmit={personalInfoForm.handleSubmit(onPersonalInfoSubmit)}
+              className="space-y-4"
+            >
+              <FormField
+                control={personalInfoForm.control}
+                name="age"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel>Age</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" min="0" max="150" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={personalInfoForm.control}
+                name="weight"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel>Weight (kg)</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" step="0.1" min="0" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={personalInfoForm.control}
+                name="height"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel>Height (cm)</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" step="0.1" min="0" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={personalInfoForm.control}
+                name="sex"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel>Sex</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your sex" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" disabled={personalInfoLoading}>
+                {personalInfoLoading ? "Saving..." : "Save Personal Information"}
               </Button>
             </form>
           </Form>
