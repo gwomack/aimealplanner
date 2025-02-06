@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthProvider"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/integrations/supabase/types"
+import { fetchExcludedIngredients, fetchWeeklyPlanIngredients } from "@/services/ingredientService"
 
 export function useIngredientsFetch(
   form: UseFormReturn<any>,
@@ -20,36 +21,16 @@ export function useIngredientsFetch(
     if (!session?.user.id) return
 
     try {
+      let ingredients: string[] = []
+      
       if (tableName === 'excluded_ingredients') {
-        const { data, error } = await supabase
-          .from('excluded_ingredients')
-          .select('ingredient')
-          .eq('user_id', session.user.id)
-
-        if (error) throw error
-
-        if (data) {
-          const ingredients = data.map(row => row.ingredient)
-          setIngredientsList(ingredients)
-          form.setValue(fieldName, ingredients.join(','))
-        }
+        ingredients = await fetchExcludedIngredients(session.user.id)
       } else if (tableName === 'weekly_meal_plan_ingredients') {
-        const { data, error } = await supabase
-          .from('weekly_meal_plan_ingredients')
-          .select(`
-            ingredient_id:ingredients!weekly_meal_plan_ingredients_ingredient_id_fkey (
-              name
-            )
-          `)
-
-        if (error) throw error
-
-        if (data) {
-          const ingredients = data.map(row => row.ingredient_id.name)
-          setIngredientsList(ingredients)
-          form.setValue(fieldName, ingredients.join(','))
-        }
+        ingredients = await fetchWeeklyPlanIngredients()
       }
+
+      setIngredientsList(ingredients)
+      form.setValue(fieldName, ingredients.join(','))
     } catch (error: any) {
       toast({
         variant: "destructive",

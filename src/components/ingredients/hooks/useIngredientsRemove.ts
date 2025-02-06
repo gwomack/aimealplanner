@@ -1,9 +1,9 @@
 
 import { useAuth } from "@/contexts/AuthProvider"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/integrations/supabase/types"
 import { UseFormReturn } from "react-hook-form"
+import { removeIngredientFromExcluded, removeIngredientFromWeeklyPlan } from "@/services/ingredientService"
 
 export function useIngredientsRemove(
   form: UseFormReturn<any>,
@@ -19,65 +19,32 @@ export function useIngredientsRemove(
   const removeIngredient = async (ingredientToRemove: string) => {
     if (!session?.user.id) return
 
-    if (tableName === 'excluded_ingredients') {
-      try {
-        const { error } = await supabase
-          .from('excluded_ingredients')
-          .delete()
-          .eq('ingredient', ingredientToRemove)
-          .eq('user_id', session.user.id)
-
-        if (error) throw error
-
+    try {
+      if (tableName === 'excluded_ingredients') {
+        await removeIngredientFromExcluded(ingredientToRemove, session.user.id)
         await fetchIngredients()
-
-        toast({
-          title: "Success",
-          description: "Ingredient removed successfully",
-        })
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Error removing ingredient",
-          description: error.message,
-        })
-      }
-    } else if (tableName === 'weekly_meal_plan_ingredients') {
-      try {
-        const { data: ingredient, error: findError } = await supabase
-          .from('ingredients')
-          .select('id')
-          .eq('name', ingredientToRemove)
-          .single()
-
-        if (findError) throw findError
-        if (!ingredient) throw new Error('Ingredient not found')
-
-        const { error: deleteError } = await supabase
-          .from('weekly_meal_plan_ingredients')
-          .delete()
-          .eq('ingredient_id', ingredient.id)
-          .eq('weekly_plan_id', form.getValues().weekly_plan_id)
-
-        if (deleteError) throw deleteError
-
+      } else if (tableName === 'weekly_meal_plan_ingredients') {
+        await removeIngredientFromWeeklyPlan(
+          ingredientToRemove,
+          form.getValues().weekly_plan_id
+        )
         await fetchIngredients()
-
-        toast({
-          title: "Success",
-          description: "Ingredient removed successfully",
-        })
-      } catch (error: any) {
-        toast({
-          variant: "destructive",
-          title: "Error removing ingredient",
-          description: error.message,
-        })
+      } else {
+        const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
+        setIngredientsList(updatedIngredients)
+        form.setValue(fieldName, updatedIngredients.join(','))
       }
-    } else {
-      const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
-      setIngredientsList(updatedIngredients)
-      form.setValue(fieldName, updatedIngredients.join(','))
+
+      toast({
+        title: "Success",
+        description: "Ingredient removed successfully",
+      })
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error removing ingredient",
+        description: error.message,
+      })
     }
   }
 
