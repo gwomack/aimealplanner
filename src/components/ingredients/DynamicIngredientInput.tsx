@@ -68,7 +68,7 @@ export function DynamicIngredientInput({
 
     const { data, error } = await supabase
       .from(tableName)
-      .select('*')
+      .select()
       .eq("user_id", session.user.id)
 
     if (error) {
@@ -78,7 +78,7 @@ export function DynamicIngredientInput({
         description: error.message,
       })
     } else if (data) {
-      const ingredients = data.map(item => item[ingredientColumn] as string)
+      const ingredients = data.map(item => (item as Record<string, any>)[ingredientColumn] as string)
       setIngredientsList(ingredients)
       form.setValue(fieldName, ingredients)
     }
