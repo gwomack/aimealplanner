@@ -22,20 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/contexts/AuthProvider"
 
@@ -53,25 +39,13 @@ const formSchema = z.object({
   ]),
   healthGoal: z.enum(["build muscle", "lose weight", "eat healthy"]),
   mealsPerDay: z.enum(["2", "3", "4", "5", "6"]),
-  ingredients: z.array(z.string()).optional(),
+  ingredients: z.string().optional(),
 })
 
 export function CreatePlanForm() {
   const { session } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
-
-  const { data: ingredients = [] } = useQuery({
-    queryKey: ['ingredients'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('ingredients')
-        .select('id, name')
-      
-      if (error) throw error
-      return data
-    },
-  })
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,7 +54,7 @@ export function CreatePlanForm() {
       dietType: "Anything",
       healthGoal: "eat healthy",
       mealsPerDay: "3",
-      ingredients: [],
+      ingredients: "",
     },
   })
 
@@ -112,9 +86,14 @@ export function CreatePlanForm() {
 
       if (prefError) throw prefError
 
-      // If ingredients were selected, first ensure they exist in the ingredients table
-      if (values.ingredients?.length) {
-        for (const ingredientName of values.ingredients) {
+      // If ingredients were entered, process them
+      if (values.ingredients) {
+        const ingredientsList = values.ingredients
+          .split(",")
+          .map(i => i.trim())
+          .filter(i => i.length > 0)
+
+        for (const ingredientName of ingredientsList) {
           // Check if ingredient exists
           const { data: existingIngredient } = await supabase
             .from('ingredients')
@@ -273,56 +252,13 @@ export function CreatePlanForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Ingredients</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className={cn(
-                        "w-full justify-between bg-popover",
-                        !field.value?.length && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value?.length
-                        ? `${field.value.length} ingredient${field.value.length === 1 ? "" : "s"} selected`
-                        : "Select ingredients"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Search ingredients..." />
-                    <CommandEmpty>No ingredient found.</CommandEmpty>
-                    <CommandGroup>
-                      {ingredients.map((ingredient) => (
-                        <CommandItem
-                          value={ingredient.name}
-                          key={ingredient.id}
-                          onSelect={() => {
-                            const currentValue = field.value || []
-                            const newValue = currentValue.includes(ingredient.name)
-                              ? currentValue.filter((value) => value !== ingredient.name)
-                              : [...currentValue, ingredient.name]
-                            field.onChange(newValue)
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              (field.value || []).includes(ingredient.name)
-                                ? "opacity-100"
-                                : "opacity-0"
-                            )}
-                          />
-                          {ingredient.name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <Input
+                  placeholder="Type ingredients separated by commas"
+                  {...field}
+                  className="bg-popover"
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
