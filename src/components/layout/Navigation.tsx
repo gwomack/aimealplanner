@@ -1,15 +1,15 @@
 
 import { NavLink } from "react-router-dom"
-import { LineChart, Plus, Settings, UserCircle2 } from "lucide-react"
+import { CalendarDays, Plus, Settings, UserCircle2 } from "lucide-react"
 
 const navigation = [
   {
-    title: "Dashboard",
+    title: "Meal Plans",
     path: "/",
-    icon: LineChart,
+    icon: CalendarDays,
   },
   {
-    title: "Generate Plan",
+    title: "Create Plan",
     path: "/generate",
     icon: Plus,
   },

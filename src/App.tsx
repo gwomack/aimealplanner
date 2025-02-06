@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthProvider"
 import RootLayout from "./components/layout/RootLayout"
-import Index from "./pages/Index"
+import WeeklyMealPlans from "./pages/WeeklyMealPlans"
 import Auth from "./pages/Auth"
 import NotFound from "./pages/NotFound"
 
@@ -22,10 +22,10 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route element={<RootLayout />}>
-              <Route index element={<Index />} />
-              <Route path="/generate" element={<Index />} />
-              <Route path="/profile" element={<Index />} />
-              <Route path="/settings" element={<Index />} />
+              <Route index element={<WeeklyMealPlans />} />
+              <Route path="/generate" element={<WeeklyMealPlans />} />
+              <Route path="/profile" element={<WeeklyMealPlans />} />
+              <Route path="/settings" element={<WeeklyMealPlans />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
