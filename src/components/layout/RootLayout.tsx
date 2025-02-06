@@ -9,8 +9,8 @@ import { Outlet } from "react-router-dom"
 export default function RootLayout() {
   return (
     <SidebarProvider defaultOpen>
-      <div className="min-h-screen flex w-full">
-        <Sidebar>
+      <div className="min-h-screen flex w-full bg-background">
+        <Sidebar className="border-r border-border bg-background">
           <SidebarHeader className="border-b border-border p-4">
             <div className="flex items-center gap-2">
               <Avatar>
@@ -18,8 +18,8 @@ export default function RootLayout() {
                 <AvatarFallback>MP</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="font-semibold">Meal Planner</span>
-                <span className="text-xs text-muted-foreground">AI-Powered</span>
+                <span className="font-semibold text-foreground">Meal Planner</span>
+                <span className="text-xs text-secondary">AI-Powered</span>
               </div>
             </div>
           </SidebarHeader>
@@ -27,13 +27,13 @@ export default function RootLayout() {
             <Navigation />
           </SidebarContent>
           <SidebarFooter className="p-4">
-            <Button variant="outline" className="w-full justify-start" size="sm">
+            <Button variant="outline" className="w-full justify-start text-secondary hover:text-foreground" size="sm">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>
+        <SidebarInset className="bg-background">
           <Outlet />
         </SidebarInset>
       </div>
