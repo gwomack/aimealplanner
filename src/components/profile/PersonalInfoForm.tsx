@@ -60,7 +60,7 @@ export function PersonalInfoForm() {
         .eq("user_id", session?.user.id)
         .maybeSingle()
 
-      if (personalError && personalError.code !== "PGRST116") {
+      if (personalError) {
         toast({
           variant: "destructive",
           title: "Error fetching personal information",
@@ -104,7 +104,7 @@ export function PersonalInfoForm() {
     const value = e.target.value
     setCurrentIngredient(value)
 
-    // If comma or enter is pressed, add the ingredient
+    // If comma is pressed, add the ingredient
     if (value.endsWith(",")) {
       const newIngredient = value.slice(0, -1).trim().toLowerCase()
       if (newIngredient && !excludedIngredientsList.includes(newIngredient)) {
@@ -121,14 +121,16 @@ export function PersonalInfoForm() {
   }
 
   const onSubmit = async (data: PersonalInfoFormValues) => {
+    if (!session?.user.id) return
+
     setLoading(true)
 
     try {
-      // Update personal information
+      // Update personal information using upsert
       const { error: personalError } = await supabase
         .from("personal_information")
         .upsert({
-          user_id: session?.user.id,
+          user_id: session.user.id,
           age: parseInt(data.age) || null,
           weight: parseFloat(data.weight) || null,
           height: parseFloat(data.height) || null,
@@ -160,7 +162,7 @@ export function PersonalInfoForm() {
             .insert(
               newIngredients.map(name => ({
                 name,
-                created_by: session?.user.id,
+                created_by: session.user.id,
               }))
             )
             .select("id, name")
@@ -173,7 +175,7 @@ export function PersonalInfoForm() {
         const { error: deleteError } = await supabase
           .from("excluded_ingredients")
           .delete()
-          .eq("user_id", session?.user.id)
+          .eq("user_id", session.user.id)
 
         if (deleteError) throw deleteError
 
@@ -182,7 +184,7 @@ export function PersonalInfoForm() {
           .from("excluded_ingredients")
           .insert(
             allIngredientIds.map(ing => ({
-              user_id: session?.user.id,
+              user_id: session.user.id,
               ingredient_id: ing.id,
             }))
           )
