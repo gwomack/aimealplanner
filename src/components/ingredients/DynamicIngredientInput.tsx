@@ -42,7 +42,7 @@ export function DynamicIngredientInput({
     if (!session?.user.id) return
 
     const channel = supabase
-      .channel(`${tableName}-changes`)
+      .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
@@ -51,8 +51,7 @@ export function DynamicIngredientInput({
           table: tableName,
           filter: `user_id=eq.${session.user.id}`,
         },
-        (payload) => {
-          console.log('Real-time update:', payload)
+        () => {
           fetchIngredients()
         }
       )
@@ -80,6 +79,7 @@ export function DynamicIngredientInput({
     } else if (data) {
       const ingredients = data.map((item) => item[ingredientColumn])
       setIngredientsList(ingredients)
+      form.setValue(fieldName, ingredients)
     }
   }
 
@@ -102,6 +102,9 @@ export function DynamicIngredientInput({
             })
 
           if (error) throw error
+
+          // Clear input after successful insertion
+          setCurrentIngredient("")
         } catch (error: any) {
           toast({
             variant: "destructive",
@@ -110,7 +113,6 @@ export function DynamicIngredientInput({
           })
         }
       }
-      setCurrentIngredient("")
     }
   }
 
@@ -125,6 +127,10 @@ export function DynamicIngredientInput({
         .eq(ingredientColumn, ingredientToRemove)
 
       if (error) throw error
+
+      // Update form value
+      const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
+      form.setValue(fieldName, updatedIngredients)
     } catch (error: any) {
       toast({
         variant: "destructive",
