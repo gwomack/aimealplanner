@@ -22,6 +22,7 @@ interface DynamicIngredientInputProps {
   label: string
   tableName: keyof Database["public"]["Tables"]
   ingredientColumn?: string
+  realtime?: boolean
 }
 
 export function DynamicIngredientInput({
@@ -29,7 +30,8 @@ export function DynamicIngredientInput({
   fieldName,
   label,
   tableName,
-  ingredientColumn = "ingredient"
+  ingredientColumn = "ingredient",
+  realtime = true
 }: DynamicIngredientInputProps) {
   const { session } = useAuth()
   const { toast } = useToast()
@@ -37,7 +39,7 @@ export function DynamicIngredientInput({
   const [ingredientsList, setIngredientsList] = useState<string[]>([])
 
   useEffect(() => {
-    if (!session?.user.id) return
+    if (!session?.user.id || !realtime) return
 
     const channel = supabase
       .channel('schema-db-changes')
@@ -57,7 +59,7 @@ export function DynamicIngredientInput({
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [session?.user.id, tableName])
+  }, [session?.user.id, tableName, realtime])
 
   const fetchIngredients = async () => {
     if (!session?.user.id) return
@@ -77,7 +79,7 @@ export function DynamicIngredientInput({
         if (data) {
           const ingredients = data.map(row => row.ingredient_id.name)
           setIngredientsList(ingredients)
-          form.setValue(fieldName, ingredients)
+          form.setValue(fieldName, ingredients.join(','))
         }
       } else {
         const { data, error } = await supabase
@@ -89,7 +91,7 @@ export function DynamicIngredientInput({
         if (data) {
           const ingredients = data.map(row => String(row[ingredientColumn]))
           setIngredientsList(ingredients)
-          form.setValue(fieldName, ingredients)
+          form.setValue(fieldName, ingredients.join(','))
         }
       }
     } catch (error: any) {
@@ -102,8 +104,10 @@ export function DynamicIngredientInput({
   }
 
   useEffect(() => {
-    fetchIngredients()
-  }, [session?.user.id])
+    if (realtime) {
+      fetchIngredients()
+    }
+  }, [session?.user.id, realtime])
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
@@ -111,54 +115,62 @@ export function DynamicIngredientInput({
       const newIngredientName = currentIngredient.trim().toLowerCase()
       
       if (newIngredientName && !ingredientsList.includes(newIngredientName)) {
-        try {
-          // First create or get the ingredient from ingredients table
-          const { data: existingIngredient, error: checkError } = await supabase
-            .from('ingredients')
-            .select('id')
-            .eq('name', newIngredientName)
-            .maybeSingle()
-
-          if (checkError) throw checkError
-
-          let ingredientId: string
-
-          if (!existingIngredient) {
-            const { data: newIngredientData, error: createError } = await supabase
+        if (realtime) {
+          try {
+            // First create or get the ingredient from ingredients table
+            const { data: existingIngredient, error: checkError } = await supabase
               .from('ingredients')
-              .insert({
-                name: newIngredientName,
-                created_by: session?.user.id as string,
-              })
               .select('id')
-              .single()
+              .eq('name', newIngredientName)
+              .maybeSingle()
 
-            if (createError) throw createError
-            ingredientId = newIngredientData.id
-          } else {
-            ingredientId = existingIngredient.id
+            if (checkError) throw checkError
+
+            let ingredientId: string
+
+            if (!existingIngredient) {
+              const { data: newIngredientData, error: createError } = await supabase
+                .from('ingredients')
+                .insert({
+                  name: newIngredientName,
+                  created_by: session?.user.id as string,
+                })
+                .select('id')
+                .single()
+
+              if (createError) throw createError
+              ingredientId = newIngredientData.id
+            } else {
+              ingredientId = existingIngredient.id
+            }
+
+            // Then handle the ingredient relationship based on table
+            if (tableName === 'weekly_meal_plan_ingredients') {
+              const { error: relationError } = await supabase
+                .from('weekly_meal_plan_ingredients')
+                .insert({
+                  ingredient_id: ingredientId,
+                  weekly_plan_id: form.getValues().weekly_plan_id,
+                })
+
+              if (relationError) throw relationError
+            }
+
+            setCurrentIngredient("")
+            await fetchIngredients()
+          } catch (error: any) {
+            toast({
+              variant: "destructive",
+              title: "Error adding ingredient",
+              description: error.message,
+            })
           }
-
-          // Then handle the ingredient relationship based on table
-          if (tableName === 'weekly_meal_plan_ingredients') {
-            const { error: relationError } = await supabase
-              .from('weekly_meal_plan_ingredients')
-              .insert({
-                ingredient_id: ingredientId,
-                weekly_plan_id: form.getValues().weekly_plan_id,
-              })
-
-            if (relationError) throw relationError
-          }
-
+        } else {
+          // For non-realtime mode, just update the local state and form value
+          const newIngredients = [...ingredientsList, newIngredientName]
+          setIngredientsList(newIngredients)
+          form.setValue(fieldName, newIngredients.join(','))
           setCurrentIngredient("")
-          await fetchIngredients()
-        } catch (error: any) {
-          toast({
-            variant: "destructive",
-            title: "Error adding ingredient",
-            description: error.message,
-          })
         }
       }
     }
@@ -167,49 +179,54 @@ export function DynamicIngredientInput({
   const removeIngredient = async (ingredientToRemove: string) => {
     if (!session?.user.id) return
 
-    try {
-      if (tableName === 'weekly_meal_plan_ingredients') {
-        // First get the ingredient ID
-        const { data: ingredient, error: findError } = await supabase
-          .from('ingredients')
-          .select('id')
-          .eq('name', ingredientToRemove)
-          .single()
+    if (realtime) {
+      try {
+        if (tableName === 'weekly_meal_plan_ingredients') {
+          // First get the ingredient ID
+          const { data: ingredient, error: findError } = await supabase
+            .from('ingredients')
+            .select('id')
+            .eq('name', ingredientToRemove)
+            .single()
 
-        if (findError) throw findError
-        if (!ingredient) throw new Error('Ingredient not found')
+          if (findError) throw findError
+          if (!ingredient) throw new Error('Ingredient not found')
 
-        // Remove from weekly_meal_plan_ingredients
-        const { error: deleteError } = await supabase
-          .from('weekly_meal_plan_ingredients')
-          .delete()
-          .eq('ingredient_id', ingredient.id)
-          .eq('weekly_plan_id', form.getValues().weekly_plan_id)
+          // Remove from weekly_meal_plan_ingredients
+          const { error: deleteError } = await supabase
+            .from('weekly_meal_plan_ingredients')
+            .delete()
+            .eq('ingredient_id', ingredient.id)
+            .eq('weekly_plan_id', form.getValues().weekly_plan_id)
 
-        if (deleteError) throw deleteError
-      } else {
-        const { error } = await supabase
-          .from(tableName)
-          .delete()
-          .eq(ingredientColumn, ingredientToRemove)
+          if (deleteError) throw deleteError
+        } else {
+          const { error } = await supabase
+            .from(tableName)
+            .delete()
+            .eq(ingredientColumn, ingredientToRemove)
 
-        if (error) throw error
+          if (error) throw error
+        }
+
+        await fetchIngredients()
+
+        toast({
+          title: "Success",
+          description: "Ingredient removed successfully",
+        })
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Error removing ingredient",
+          description: error.message,
+        })
       }
-
+    } else {
+      // For non-realtime mode, just update the local state and form value
       const updatedIngredients = ingredientsList.filter(ing => ing !== ingredientToRemove)
       setIngredientsList(updatedIngredients)
-      form.setValue(fieldName, updatedIngredients)
-
-      toast({
-        title: "Success",
-        description: "Ingredient removed successfully",
-      })
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error removing ingredient",
-        description: error.message,
-      })
+      form.setValue(fieldName, updatedIngredients.join(','))
     }
   }
 

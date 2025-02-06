@@ -15,6 +15,7 @@ export function IngredientsField({ form }: IngredientsFieldProps) {
       label="Ingredients"
       tableName="weekly_meal_plan_ingredients"
       ingredientColumn="ingredient_id"
+      realtime={false}
     />
   )
 }
