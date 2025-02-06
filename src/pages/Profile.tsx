@@ -76,7 +76,7 @@ export default function Profile() {
         .from("profiles")
         .select("username")
         .eq("id", session?.user.id)
-        .single()
+        .maybeSingle()
 
       if (error) {
         toast({
@@ -104,7 +104,7 @@ export default function Profile() {
         .from("personal_information")
         .select("age, weight, height, sex")
         .eq("user_id", session?.user.id)
-        .single()
+        .maybeSingle()
 
       if (error && error.code !== "PGRST116") {
         // PGRST116 means no data found
