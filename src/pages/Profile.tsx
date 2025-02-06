@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useAuth } from "@/contexts/AuthProvider"
@@ -6,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
@@ -42,6 +42,7 @@ interface PersonalInfoFormValues {
   weight: string
   height: string
   sex: string
+  excludedIngredients: string
 }
 
 export default function Profile() {
@@ -49,6 +50,7 @@ export default function Profile() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [personalInfoLoading, setPersonalInfoLoading] = useState(false)
+  const [excludedIngredientsList, setExcludedIngredientsList] = useState<string[]>([])
 
   const form = useForm<ProfileFormValues>({
     defaultValues: {
@@ -65,6 +67,7 @@ export default function Profile() {
       weight: "",
       height: "",
       sex: "",
+      excludedIngredients: "",
     },
   })
 
@@ -96,34 +99,52 @@ export default function Profile() {
     enabled: !!session,
   })
 
-  // Fetch personal information
+  // Fetch personal information and excluded ingredients
   const { data: personalInfo } = useQuery({
     queryKey: ["personal-info"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: personalData, error: personalError } = await supabase
         .from("personal_information")
         .select("age, weight, height, sex")
         .eq("user_id", session?.user.id)
         .maybeSingle()
 
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 means no data found
+      if (personalError && personalError.code !== "PGRST116") {
         toast({
           variant: "destructive",
           title: "Error fetching personal information",
-          description: error.message,
+          description: personalError.message,
         })
         return null
       }
 
-      if (data) {
-        personalInfoForm.setValue("age", data.age?.toString() || "")
-        personalInfoForm.setValue("weight", data.weight?.toString() || "")
-        personalInfoForm.setValue("height", data.height?.toString() || "")
-        personalInfoForm.setValue("sex", data.sex || "")
+      // Fetch excluded ingredients
+      const { data: excludedData, error: excludedError } = await supabase
+        .from("excluded_ingredients")
+        .select("ingredient_id, ingredients(name)")
+        .eq("user_id", session?.user.id)
+
+      if (excludedError) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching excluded ingredients",
+          description: excludedError.message,
+        })
+      } else if (excludedData) {
+        const ingredientNames = excludedData.map(
+          (item: any) => item.ingredients.name
+        )
+        setExcludedIngredientsList(ingredientNames)
       }
 
-      return data
+      if (personalData) {
+        personalInfoForm.setValue("age", personalData.age?.toString() || "")
+        personalInfoForm.setValue("weight", personalData.weight?.toString() || "")
+        personalInfoForm.setValue("height", personalData.height?.toString() || "")
+        personalInfoForm.setValue("sex", personalData.sex || "")
+      }
+
+      return personalData
     },
     enabled: !!session,
   })
@@ -183,7 +204,8 @@ export default function Profile() {
     setPersonalInfoLoading(true)
 
     try {
-      const { error } = await supabase
+      // Update personal information
+      const { error: personalError } = await supabase
         .from("personal_information")
         .upsert({
           user_id: session?.user.id,
@@ -193,12 +215,60 @@ export default function Profile() {
           sex: data.sex || null,
         })
 
-      if (error) throw error
+      if (personalError) throw personalError
+
+      // Handle excluded ingredients
+      if (data.excludedIngredients) {
+        const ingredients = data.excludedIngredients
+          .split(",")
+          .map((i) => i.trim())
+          .filter((i) => i)
+
+        // First, insert new ingredients if they don't exist
+        for (const ingredient of ingredients) {
+          const { data: existingIngredient } = await supabase
+            .from("ingredients")
+            .select("id")
+            .eq("name", ingredient.toLowerCase())
+            .maybeSingle()
+
+          let ingredientId = existingIngredient?.id
+
+          if (!ingredientId) {
+            const { data: newIngredient, error: insertError } = await supabase
+              .from("ingredients")
+              .insert({
+                name: ingredient.toLowerCase(),
+                created_by: session?.user.id,
+              })
+              .select("id")
+              .single()
+
+            if (insertError) throw insertError
+            ingredientId = newIngredient.id
+          }
+
+          // Insert excluded ingredient
+          const { error: excludeError } = await supabase
+            .from("excluded_ingredients")
+            .upsert({
+              user_id: session?.user.id,
+              ingredient_id: ingredientId,
+            })
+
+          if (excludeError) throw excludeError
+        }
+
+        setExcludedIngredientsList(ingredients)
+      }
 
       toast({
         title: "Personal information updated",
         description: "Your personal information has been updated successfully.",
       })
+
+      // Clear the excluded ingredients input
+      personalInfoForm.setValue("excludedIngredients", "")
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -375,6 +445,37 @@ export default function Profile() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={personalInfoForm.control}
+                name="excludedIngredients"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5 col-span-2">
+                    <FormLabel>Excluded Ingredients</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="Enter ingredients separated by commas"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {excludedIngredientsList.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {excludedIngredientsList.map((ingredient, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="text-sm"
+                    >
+                      {ingredient}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               <Button type="submit" disabled={personalInfoLoading}>
                 {personalInfoLoading ? "Saving..." : "Save Personal Information"}
