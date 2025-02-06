@@ -72,7 +72,7 @@ export function PersonalInfoForm() {
       // Fetch excluded ingredients
       const { data: excludedData, error: excludedError } = await supabase
         .from("excluded_ingredients")
-        .select("ingredient_id, ingredients(name)")
+        .select("ingredient")
         .eq("user_id", session?.user.id)
 
       if (excludedError) {
@@ -82,10 +82,8 @@ export function PersonalInfoForm() {
           description: excludedError.message,
         })
       } else if (excludedData) {
-        const ingredientNames = excludedData.map(
-          (item: any) => item.ingredients.name
-        )
-        setExcludedIngredientsList(ingredientNames)
+        const ingredients = excludedData.map((item) => item.ingredient)
+        setExcludedIngredientsList(ingredients)
       }
 
       if (personalData) {
@@ -141,36 +139,6 @@ export function PersonalInfoForm() {
 
       // Handle excluded ingredients
       if (excludedIngredientsList.length > 0) {
-        // First, get all existing ingredients to avoid duplicates
-        const { data: existingIngredients, error: existingError } = await supabase
-          .from("ingredients")
-          .select("id, name")
-          .in("name", excludedIngredientsList)
-
-        if (existingError) throw existingError
-
-        const existingNames = existingIngredients.map(ing => ing.name)
-        const newIngredients = excludedIngredientsList.filter(
-          ing => !existingNames.includes(ing)
-        )
-
-        // Insert new ingredients
-        let allIngredientIds = [...existingIngredients]
-        if (newIngredients.length > 0) {
-          const { data: newIngredientsData, error: insertError } = await supabase
-            .from("ingredients")
-            .insert(
-              newIngredients.map(name => ({
-                name,
-                created_by: session.user.id,
-              }))
-            )
-            .select("id, name")
-
-          if (insertError) throw insertError
-          allIngredientIds = [...allIngredientIds, ...newIngredientsData]
-        }
-
         // Delete existing excluded ingredients for this user
         const { error: deleteError } = await supabase
           .from("excluded_ingredients")
@@ -183,9 +151,9 @@ export function PersonalInfoForm() {
         const { error: excludeError } = await supabase
           .from("excluded_ingredients")
           .insert(
-            allIngredientIds.map(ing => ({
+            excludedIngredientsList.map(ingredient => ({
               user_id: session.user.id,
-              ingredient_id: ing.id,
+              ingredient: ingredient,
             }))
           )
 
