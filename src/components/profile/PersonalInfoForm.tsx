@@ -50,6 +50,55 @@ export function PersonalInfoForm() {
     },
   })
 
+  // Subscribe to real-time updates for excluded ingredients
+  useEffect(() => {
+    if (!session?.user.id) return
+
+    // Subscribe to changes
+    const channel = supabase
+      .channel('excluded-ingredients-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'excluded_ingredients',
+          filter: `user_id=eq.${session.user.id}`,
+        },
+        (payload) => {
+          console.log('Real-time update:', payload)
+          // Refetch the excluded ingredients when there's a change
+          fetchExcludedIngredients()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [session?.user.id])
+
+  // Function to fetch excluded ingredients
+  const fetchExcludedIngredients = async () => {
+    if (!session?.user.id) return
+
+    const { data: excludedData, error: excludedError } = await supabase
+      .from("excluded_ingredients")
+      .select("ingredient")
+      .eq("user_id", session.user.id)
+
+    if (excludedError) {
+      toast({
+        variant: "destructive",
+        title: "Error fetching excluded ingredients",
+        description: excludedError.message,
+      })
+    } else if (excludedData) {
+      const ingredients = excludedData.map((item) => item.ingredient)
+      setExcludedIngredientsList(ingredients)
+    }
+  }
+
   // Fetch personal information and excluded ingredients
   const { data: personalInfo } = useQuery({
     queryKey: ["personal-info"],
@@ -69,22 +118,8 @@ export function PersonalInfoForm() {
         return null
       }
 
-      // Fetch excluded ingredients
-      const { data: excludedData, error: excludedError } = await supabase
-        .from("excluded_ingredients")
-        .select("ingredient")
-        .eq("user_id", session?.user.id)
-
-      if (excludedError) {
-        toast({
-          variant: "destructive",
-          title: "Error fetching excluded ingredients",
-          description: excludedError.message,
-        })
-      } else if (excludedData) {
-        const ingredients = excludedData.map((item) => item.ingredient)
-        setExcludedIngredientsList(ingredients)
-      }
+      // Fetch excluded ingredients initially
+      await fetchExcludedIngredients()
 
       if (personalData) {
         form.setValue("age", personalData.age?.toString() || "")
@@ -112,10 +147,26 @@ export function PersonalInfoForm() {
     }
   }
 
-  const removeIngredient = (ingredientToRemove: string) => {
-    setExcludedIngredientsList(
-      excludedIngredientsList.filter((ing) => ing !== ingredientToRemove)
-    )
+  const removeIngredient = async (ingredientToRemove: string) => {
+    if (!session?.user.id) return
+
+    try {
+      const { error } = await supabase
+        .from("excluded_ingredients")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("ingredient", ingredientToRemove)
+
+      if (error) throw error
+
+      // No need to update the local state as we'll receive the update via real-time subscription
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error removing ingredient",
+        description: error.message,
+      })
+    }
   }
 
   const onSubmit = async (data: PersonalInfoFormValues) => {
@@ -144,14 +195,12 @@ export function PersonalInfoForm() {
 
       let personalError
       if (existingData) {
-        // Update existing record
         const { error } = await supabase
           .from("personal_information")
           .update(personalInfoData)
           .eq("user_id", session.user.id)
         personalError = error
       } else {
-        // Insert new record
         const { error } = await supabase
           .from("personal_information")
           .insert([personalInfoData])
