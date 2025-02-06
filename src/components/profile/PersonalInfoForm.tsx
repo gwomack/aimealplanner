@@ -124,16 +124,39 @@ export function PersonalInfoForm() {
     setLoading(true)
 
     try {
-      // Update personal information using upsert
-      const { error: personalError } = await supabase
+      // Check if personal information exists
+      const { data: existingData, error: checkError } = await supabase
         .from("personal_information")
-        .upsert({
-          user_id: session.user.id,
-          age: parseInt(data.age) || null,
-          weight: parseFloat(data.weight) || null,
-          height: parseFloat(data.height) || null,
-          sex: data.sex || null,
-        })
+        .select("id")
+        .eq("user_id", session.user.id)
+        .maybeSingle()
+
+      if (checkError) throw checkError
+
+      // Update or insert personal information based on existence
+      const personalInfoData = {
+        user_id: session.user.id,
+        age: parseInt(data.age) || null,
+        weight: parseFloat(data.weight) || null,
+        height: parseFloat(data.height) || null,
+        sex: data.sex || null,
+      }
+
+      let personalError
+      if (existingData) {
+        // Update existing record
+        const { error } = await supabase
+          .from("personal_information")
+          .update(personalInfoData)
+          .eq("user_id", session.user.id)
+        personalError = error
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from("personal_information")
+          .insert([personalInfoData])
+        personalError = error
+      }
 
       if (personalError) throw personalError
 
