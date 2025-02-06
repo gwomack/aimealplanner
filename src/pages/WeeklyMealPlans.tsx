@@ -56,7 +56,7 @@ export default function WeeklyMealPlans() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F97316]" />
       </div>
     )
   }
@@ -64,10 +64,10 @@ export default function WeeklyMealPlans() {
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#F97316] via-[#D946EF] to-[#8B5CF6]">
           Weekly Meal Plans
         </h1>
-        <Button onClick={handleCreatePlan} className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+        <Button onClick={handleCreatePlan} className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90">
           <Plus className="mr-2 h-4 w-4" />
           New Plan
         </Button>
@@ -78,10 +78,12 @@ export default function WeeklyMealPlans() {
           {weeklyPlans.map((plan) => (
             <Card 
               key={plan.id}
-              className="relative group hover:shadow-lg transition-all duration-300 border border-border/50 backdrop-blur-sm bg-gradient-to-br from-card/50 to-card/30"
+              className="relative group hover:shadow-lg transition-all duration-300 border border-white/10 backdrop-blur-sm bg-gradient-to-br from-black/40 to-black/20"
             >
               <CardHeader>
-                <CardTitle className="text-xl font-semibold">{plan.name}</CardTitle>
+                <CardTitle className="text-xl font-semibold bg-gradient-to-r from-[#F97316] via-[#D946EF] to-[#8B5CF6] bg-clip-text text-transparent">
+                  {plan.name}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
@@ -92,7 +94,7 @@ export default function WeeklyMealPlans() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300"
+                  className="w-full group-hover:bg-gradient-to-r group-hover:from-[#F97316] group-hover:to-[#D946EF] group-hover:text-white transition-all duration-300"
                 >
                   View Details
                 </Button>
@@ -101,13 +103,13 @@ export default function WeeklyMealPlans() {
           ))}
         </div>
       ) : (
-        <Card className="text-center py-12 border border-border/50 backdrop-blur-sm bg-gradient-to-br from-card/50 to-card/30">
+        <Card className="text-center py-12 border border-white/10 backdrop-blur-sm bg-gradient-to-br from-black/40 to-black/20">
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">No meal plans yet</p>
             <Button 
               onClick={handleCreatePlan} 
               variant="outline"
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground"
+              className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90"
             >
               Create your first meal plan
             </Button>
