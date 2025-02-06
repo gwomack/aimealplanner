@@ -304,6 +304,39 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_meal_plan_ingredients: {
+        Row: {
+          created_at: string
+          ingredient_id: string
+          weekly_plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: string
+          weekly_plan_id: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: string
+          weekly_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_meal_plan_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_meal_plan_ingredients_weekly_plan_id_fkey"
+            columns: ["weekly_plan_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_meal_plans: {
         Row: {
           created_at: string
