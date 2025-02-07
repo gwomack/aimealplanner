@@ -16,7 +16,13 @@ serve(async (req) => {
 
   try {
     const genAI = new GoogleGenerativeAI(Deno.env.get('GEMINI_API_KEY') || '')
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-pro',
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.4
+      }
+    })
 
     const { weeklyPlanId, preferences } = await req.json()
     console.log('Received request for weekly plan:', weeklyPlanId, 'with preferences:', preferences)
@@ -28,12 +34,12 @@ serve(async (req) => {
     )
 
     // Generate the meal plan prompt with more explicit formatting instructions
-    const prompt = `Generate a 7-day meal plan with ${preferences.mealsPerDay} meals per day. 
+    const prompt = `Generate a 7-day meal plan with ${preferences.mealsPerDay} meals per day. Each meal must be REALISTIC and SIMPLE. 
     Diet type: ${preferences.dietType}
     Health goal: ${preferences.healthGoal}
     ${preferences.ingredients ? `Include these ingredients where possible: ${preferences.ingredients}` : ''}
     
-    You must respond with valid JSON that exactly matches this structure:
+    Respond with JSON that matches this EXACT structure:
     {
       "days": [
         {
@@ -53,18 +59,34 @@ serve(async (req) => {
       ]
     }
     
-    Ensure that:
-    1. All numeric values are actual numbers, not strings
+    Rules:
+    1. All numeric values must be numbers, not strings
     2. The "type" field must be one of: "breakfast", "lunch", "dinner", "snack"
     3. The "day" field must be a capitalized day name: Monday, Tuesday, etc.
     4. Include exactly 7 days in order starting from Monday
     5. Each day must have exactly ${preferences.mealsPerDay} meals
-    6. All fields are required for each meal`
+    6. All fields are required for each meal
+    7. Keep meal names and descriptions SHORT AND CONCISE
+    8. Descriptions should be under 50 characters
+    9. DO NOT add any markdown formatting or extra text, JUST THE JSON`
 
     console.log('Generating meal plan with prompt:', prompt)
 
-    // Generate content
-    const result = await model.generateContent(prompt)
+    // Generate content with safety settings and streaming disabled
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 2048,
+        temperature: 0.4
+      },
+      safetySettings: [
+        {
+          category: 'HARM_CATEGORY_HARASSMENT',
+          threshold: 'BLOCK_NONE',
+        },
+      ],
+    })
+
     const response = await result.response
     const text = response.text()
     
@@ -76,7 +98,7 @@ serve(async (req) => {
       const jsonEndIndex = text.lastIndexOf('}') + 1
       const jsonText = text.slice(jsonStartIndex, jsonEndIndex)
       
-      console.log('Attempting to parse JSON:', jsonText)
+      console.log('Attempting to parse cleaned JSON:', jsonText)
       
       const mealPlan = JSON.parse(jsonText)
 
@@ -90,6 +112,14 @@ serve(async (req) => {
         if (!day.day || !day.meals || !Array.isArray(day.meals)) {
           console.error('Invalid day structure:', day)
           throw new Error(`Invalid structure for day: ${day.day}`)
+        }
+
+        // Validate each meal
+        for (const meal of day.meals) {
+          if (!meal.name || !meal.type || !meal.calories || !meal.protein || !meal.carbs || !meal.fat || !meal.description) {
+            console.error('Invalid meal structure:', meal)
+            throw new Error(`Invalid meal structure in ${day.day}`)
+          }
         }
 
         const { data: dailyPlan, error: dailyPlanError } = await supabaseClient
