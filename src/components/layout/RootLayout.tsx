@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { LogOut, Settings, User } from "lucide-react"
@@ -64,14 +65,24 @@ export default function RootLayout() {
       <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container flex h-16 items-center justify-between px-4">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-2">
-            <Avatar>
-              <AvatarImage src="/og-image.png" alt="Meal Planner Logo" />
-              <AvatarFallback>MP</AvatarFallback>
-            </Avatar>
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate("/plans")}
+          >
+            <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gradient-to-br from-[#F97316] via-[#D946EF] to-[#8B5CF6] p-[2px]">
+              <div className="w-full h-full rounded-full overflow-hidden">
+                <img 
+                  src="/meal-planner-logo.png" 
+                  alt="Meal Planner Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-foreground">Meal Planner</span>
-              <span className="text-xs text-secondary">AI-Powered</span>
+              <span className="font-semibold text-foreground bg-clip-text text-transparent bg-gradient-to-r from-[#F97316] via-[#D946EF] to-[#8B5CF6]">
+                Meal Planner
+              </span>
+              <span className="text-xs text-muted-foreground">AI-Powered</span>
             </div>
           </div>
 
