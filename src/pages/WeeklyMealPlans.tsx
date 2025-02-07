@@ -45,24 +45,30 @@ export default function WeeklyMealPlans() {
 
   const deleteMutation = useMutation({
     mutationFn: async (planId: string) => {
+      // Delete all daily meal plans first
       const { error: dailyPlansError } = await supabase
         .from("daily_meal_plans")
         .delete()
         .eq("weekly_plan_id", planId)
+        .then(response => response)
 
       if (dailyPlansError) throw dailyPlansError
 
+      // Delete all plan ingredients
       const { error: ingredientsError } = await supabase
         .from("weekly_meal_plan_ingredients")
         .delete()
         .eq("weekly_plan_id", planId)
+        .then(response => response)
 
       if (ingredientsError) throw ingredientsError
 
+      // Finally delete the weekly plan
       const { error } = await supabase
         .from("weekly_meal_plans")
         .delete()
         .eq("id", planId)
+        .then(response => response)
 
       if (error) throw error
     },
@@ -146,23 +152,25 @@ export default function WeeklyMealPlans() {
               onClick={() => {
                 if (session?.user.id) {
                   const userId = session.user.id
-                  const { error } = supabase.from("weekly_meal_plans").insert({
+                  supabase.from("weekly_meal_plans").insert({
                     name: `Meal Plan ${new Date().toLocaleDateString()}`,
                     user_id: userId,
                   })
-                  if (error) {
-                    toast({
-                      variant: "destructive",
-                      title: "Error creating meal plan",
-                      description: error.message,
-                    })
-                  } else {
-                    toast({
-                      title: "Success",
-                      description: "New meal plan created",
-                    })
-                    queryClient.invalidateQueries({ queryKey: ["weeklyPlans"] })
-                  }
+                  .then(({ error }) => {
+                    if (error) {
+                      toast({
+                        variant: "destructive",
+                        title: "Error creating meal plan",
+                        description: error.message,
+                      })
+                    } else {
+                      toast({
+                        title: "Success",
+                        description: "New meal plan created",
+                      })
+                      queryClient.invalidateQueries({ queryKey: ["weeklyPlans"] })
+                    }
+                  })
                 }
               }}
               variant="outline"
