@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, UtensilsCrossed, Flame, Dumbbell, Beef, Cookie } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 const DAYS_OF_WEEK = [
@@ -90,7 +91,7 @@ const MealPlanDetail = () => {
               onClick={() => setSelectedDay(day)}
               className={cn(
                 "px-3 py-1 text-sm",
-                day === selectedDay && "bg-primary text-primary-foreground"
+                day === selectedDay && "bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white"
               )}
             >
               {day.slice(0, 3)}
@@ -148,27 +149,42 @@ const MealPlanDetail = () => {
           {dailyPlan?.meals?.map((meal: any, index: number) => (
             <Card key={index}>
               <CardHeader>
-                <CardTitle className="capitalize">{meal.type}</CardTitle>
-                <CardDescription>{meal.name}</CardDescription>
+                <div className="flex items-center justify-between">
+                  <Badge 
+                    className={cn(
+                      "text-white px-3 py-1",
+                      meal.type === "breakfast" && "bg-[#F97316]",
+                      meal.type === "lunch" && "bg-[#D946EF]",
+                      meal.type === "dinner" && "bg-[#8B5CF6]",
+                      meal.type === "snack" && "bg-[#9b87f5]"
+                    )}
+                  >
+                    <UtensilsCrossed className="w-3 h-3 mr-1" />
+                    {meal.type}
+                  </Badge>
+                </div>
+                <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#F97316] via-[#D946EF] to-[#8B5CF6]">
+                  {meal.name}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <span className="font-medium">Calories: </span>
-                    {meal.calories}
-                  </div>
-                  <div>
-                    <span className="font-medium">Protein: </span>
-                    {meal.protein}g
-                  </div>
-                  <div>
-                    <span className="font-medium">Carbs: </span>
-                    {meal.carbs}g
-                  </div>
-                  <div>
-                    <span className="font-medium">Fat: </span>
-                    {meal.fat}g
-                  </div>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <Badge variant="outline" className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white border-none">
+                    <Flame className="w-3 h-3 mr-1" />
+                    {meal.calories} calories
+                  </Badge>
+                  <Badge variant="outline" className="bg-gradient-to-r from-[#D946EF] to-[#8B5CF6] text-white border-none">
+                    <Dumbbell className="w-3 h-3 mr-1" />
+                    {meal.protein}g protein
+                  </Badge>
+                  <Badge variant="outline" className="bg-gradient-to-r from-[#8B5CF6] to-[#F97316] text-white border-none">
+                    <Cookie className="w-3 h-3 mr-1" />
+                    {meal.carbs}g carbs
+                  </Badge>
+                  <Badge variant="outline" className="bg-gradient-to-r from-[#F97316] to-[#8B5CF6] text-white border-none">
+                    <Beef className="w-3 h-3 mr-1" />
+                    {meal.fat}g fat
+                  </Badge>
                 </div>
                 <p className="mt-4 text-muted-foreground">{meal.description}</p>
               </CardContent>
@@ -181,3 +197,4 @@ const MealPlanDetail = () => {
 }
 
 export default MealPlanDetail
+
