@@ -1,4 +1,3 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { LogOut, Settings, User } from "lucide-react"
@@ -67,7 +66,7 @@ export default function RootLayout() {
           {/* Logo & Brand */}
           <div className="flex items-center gap-2">
             <Avatar>
-              <AvatarImage src="/placeholder.svg" />
+              <AvatarImage src="/og-image.png" alt="Meal Planner Logo" />
               <AvatarFallback>MP</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
