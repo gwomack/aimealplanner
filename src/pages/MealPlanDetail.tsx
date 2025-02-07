@@ -88,13 +88,13 @@ const MealPlanDetail = () => {
               <CardDescription>Required ingredients for this meal plan</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
                 {ingredients?.map((ingredient, index) => (
                   <div
                     key={index}
-                    className="bg-[#221F26] rounded-lg p-2 text-sm shadow-sm border border-[#4ADE80]/20"
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#221F26] text-muted-foreground border border-[#4ADE80]/20 hover:bg-[#2A262F] transition-colors"
                   >
-                    <span className="text-muted-foreground">{ingredient}</span>
+                    {ingredient}
                   </div>
                 ))}
                 {!ingredients?.length && (
