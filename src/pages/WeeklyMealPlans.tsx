@@ -1,12 +1,24 @@
-import { useQuery } from "@tanstack/react-query"
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Plus, Apple, Carrot, Pizza, CakeSlice, ChefHat, UtensilsCrossed, Search } from "lucide-react"
+import { Plus, Apple, Carrot, Pizza, CakeSlice, ChefHat, UtensilsCrossed, Search, Trash2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/AuthProvider"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Link } from "react-router-dom"
 import { Input } from "@/components/ui/input"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {
   Pagination,
   PaginationContent,
@@ -24,6 +36,7 @@ export default function WeeklyMealPlans() {
   const { toast } = useToast()
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
+  const queryClient = useQueryClient()
 
   const { data: weeklyPlans, isLoading } = useQuery({
     queryKey: ["weeklyPlans"],
@@ -47,6 +60,48 @@ export default function WeeklyMealPlans() {
     enabled: !!session,
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      // Delete related daily plans first
+      const { error: dailyPlansError } = await supabase
+        .from("daily_meal_plans")
+        .delete()
+        .eq("weekly_plan_id", planId)
+
+      if (dailyPlansError) throw dailyPlansError
+
+      // Delete related ingredients
+      const { error: ingredientsError } = await supabase
+        .from("weekly_meal_plan_ingredients")
+        .delete()
+        .eq("weekly_plan_id", planId)
+
+      if (ingredientsError) throw ingredientsError
+
+      // Finally delete the weekly plan
+      const { error } = await supabase
+        .from("weekly_meal_plans")
+        .delete()
+        .eq("id", planId)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["weeklyPlans"] })
+      toast({
+        title: "Success",
+        description: "Meal plan deleted successfully",
+      })
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error deleting meal plan",
+        description: error.message,
+      })
+    },
+  })
+
   const handleCreatePlan = async () => {
     const { error } = await supabase.from("weekly_meal_plans").insert({
       name: `Meal Plan ${new Date().toLocaleDateString()}`,
@@ -64,6 +119,7 @@ export default function WeeklyMealPlans() {
         title: "Success",
         description: "New meal plan created",
       })
+      queryClient.invalidateQueries({ queryKey: ["weeklyPlans"] })
     }
   }
 
@@ -146,8 +202,8 @@ export default function WeeklyMealPlans() {
                     Created on {new Date(plan.created_at).toLocaleDateString()}
                   </p>
                 </CardContent>
-                <CardFooter>
-                  <Link to={`/plans/${plan.id}`} className="w-full">
+                <CardFooter className="flex gap-2">
+                  <Link to={`/plans/${plan.id}`} className="flex-1">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -156,6 +212,34 @@ export default function WeeklyMealPlans() {
                       View Details
                     </Button>
                   </Link>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="group-hover:bg-red-500 group-hover:text-white transition-all duration-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Meal Plan</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this meal plan? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteMutation.mutate(plan.id)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </CardFooter>
               </Card>
             ))}
