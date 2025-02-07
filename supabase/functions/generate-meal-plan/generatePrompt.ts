@@ -6,11 +6,11 @@ export function generateMealPlanPrompt(preferences: { dietType: string; healthGo
     ${preferences.ingredients ? `Include these ingredients where possible: ${preferences.ingredients}` : ''}
     
     Response format:
+    - You MUST include EXACTLY 7 days, one for each day of the week
+    - Days MUST be in order: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
     - Each meal MUST have these exact fields: name, type, calories, protein, carbs, fat, description
     - All numeric values MUST be numbers (not strings)
     - The "type" field must be exactly one of: "breakfast", "lunch", "dinner", "snack"
-    - The "day" field must be a capitalized day name: Monday, Tuesday, etc.
-    - Include exactly 7 days starting from Monday
     - Each day must have exactly ${preferences.mealsPerDay} meals
     - Keep descriptions short (under 50 characters)
     - Keep meal names short (under 30 characters)

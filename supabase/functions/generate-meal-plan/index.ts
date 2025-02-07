@@ -22,8 +22,8 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-pro',
       generationConfig: {
-        maxOutputTokens: 30000,
-        temperature: 0.1 // Reduced for more consistent output
+        maxOutputTokens: 32000,  // Increased from 30000
+        temperature: 0.05       // Reduced from 0.1 for more consistent output
       }
     })
 
@@ -40,6 +40,7 @@ serve(async (req) => {
 
     let retryCount = 0
     const maxRetries = 3
+    const baseDelay = 1000 // 1 second base delay
     let lastError = null
 
     while (retryCount < maxRetries) {
@@ -96,9 +97,9 @@ serve(async (req) => {
         retryCount++
         
         if (retryCount < maxRetries) {
-          console.log(`Retrying... (${retryCount}/${maxRetries})`)
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000))
+          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 10000) // Cap at 10 seconds
+          console.log(`Retrying in ${delay}ms... (${retryCount}/${maxRetries})`)
+          await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
     }
@@ -112,7 +113,6 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message,
         details: error.cause?.message || error.stack,
-        rawResponse: error.rawResponse 
       }),
       { 
         status: 500,

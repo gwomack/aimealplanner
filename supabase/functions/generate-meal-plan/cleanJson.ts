@@ -14,12 +14,12 @@ export function cleanJsonResponse(text: string): string {
   if (currentDays < expectedDays) {
     console.log(`Found ${currentDays} days, expecting ${expectedDays}. JSON appears to be truncated.`)
     
-    // Find the last complete meal object
+    // Check if we have a partially complete day
     const lastCompleteIndex = cleanedText.lastIndexOf('      }')
     if (lastCompleteIndex !== -1) {
       cleanedText = cleanedText.substring(0, lastCompleteIndex + 7)
       
-      // Close any open arrays and objects
+      // Count open/close brackets and braces
       const openBraces = (cleanedText.match(/{/g) || []).length
       const closeBraces = (cleanedText.match(/}/g) || []).length
       const openBrackets = (cleanedText.match(/\[/g) || []).length
@@ -37,6 +37,13 @@ export function cleanJsonResponse(text: string): string {
       
       // Close the days array and root object
       cleanedText += '\n  ]\n}'
+      
+      // If we still don't have enough days, throw an error
+      // This will trigger a retry in the main function
+      const finalDaysMatch = cleanedText.match(/\"day\"\s*:\s*\"[^\"]+\"/g) || []
+      if (finalDaysMatch.length < expectedDays) {
+        throw new Error(`Expected ${expectedDays} days, got ${finalDaysMatch.length}`)
+      }
     }
   }
 
