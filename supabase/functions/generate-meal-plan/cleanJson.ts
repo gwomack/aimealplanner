@@ -14,6 +14,11 @@ export function cleanJsonResponse(text: string): string {
   if (currentDays < expectedDays) {
     console.log(`Found ${currentDays} days, expecting ${expectedDays}. JSON appears to be truncated.`)
     
+    // If JSON is clearly incomplete, throw error to trigger retry
+    if (currentDays < 4) {
+      throw new Error('Response too incomplete, needs retry')
+    }
+    
     // Check if we have a partially complete day
     const lastCompleteIndex = cleanedText.lastIndexOf('      }')
     if (lastCompleteIndex !== -1) {
@@ -38,8 +43,7 @@ export function cleanJsonResponse(text: string): string {
       // Close the days array and root object
       cleanedText += '\n  ]\n}'
       
-      // If we still don't have enough days, throw an error
-      // This will trigger a retry in the main function
+      // Final validation of day count
       const finalDaysMatch = cleanedText.match(/\"day\"\s*:\s*\"[^\"]+\"/g) || []
       if (finalDaysMatch.length < expectedDays) {
         throw new Error(`Expected ${expectedDays} days, got ${finalDaysMatch.length}`)

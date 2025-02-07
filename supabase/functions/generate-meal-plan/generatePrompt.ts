@@ -1,39 +1,34 @@
 
 export function generateMealPlanPrompt(preferences: { dietType: string; healthGoal: string; mealsPerDay: string; ingredients?: string }): string {
-  return `Generate a 7-day meal plan with ${preferences.mealsPerDay} meals per day that follows these specifications EXACTLY:
+  return `You are a meal plan generator. Generate EXACTLY 7 days of meals starting from Monday. 
     Diet type: ${preferences.dietType}
     Health goal: ${preferences.healthGoal}
     ${preferences.ingredients ? `Include these ingredients where possible: ${preferences.ingredients}` : ''}
     
-    Response format:
-    - You MUST include EXACTLY 7 days, one for each day of the week
-    - Days MUST be in order: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
-    - Each meal MUST have these exact fields: name, type, calories, protein, carbs, fat, description
-    - All numeric values MUST be numbers (not strings)
-    - The "type" field must be exactly one of: "breakfast", "lunch", "dinner", "snack"
-    - Each day must have exactly ${preferences.mealsPerDay} meals
-    - Keep descriptions short (under 50 characters)
-    - Keep meal names short (under 30 characters)
-    - All field values must be properly quoted strings or numbers
-    - ONLY return a valid JSON object without any explanation or markdown formatting
-    
-    Example of expected format:
+    STRICT FORMAT REQUIREMENTS:
+    1. You MUST generate EXACTLY 7 days
+    2. Days MUST be Monday through Sunday in order
+    3. Each day MUST include EXACTLY ${preferences.mealsPerDay} meals
+    4. Each meal MUST have these fields:
+       - name (string, max 30 chars)
+       - type (exactly one of: breakfast, lunch, dinner, snack)
+       - calories (number)
+       - protein (number)
+       - carbs (number)
+       - fat (number)
+       - description (string, max 50 chars)
+    5. Return ONLY a valid JSON object with this structure:
     {
       "days": [
         {
           "day": "Monday",
-          "meals": [
-            {
-              "name": "Oatmeal with Berries",
-              "type": "breakfast",
-              "calories": 300,
-              "protein": 10,
-              "carbs": 40,
-              "fat": 8,
-              "description": "Oatmeal topped with mixed berries"
-            }
-          ]
+          "meals": [...]
+        },
+        {
+          "day": "Tuesday",
+          "meals": [...]
         }
+        // and so on for ALL 7 days
       ]
     }`
 }

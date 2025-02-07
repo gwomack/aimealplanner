@@ -22,8 +22,8 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-pro',
       generationConfig: {
-        maxOutputTokens: 32000,  // Increased from 30000
-        temperature: 0.05       // Reduced from 0.1 for more consistent output
+        maxOutputTokens: 40000,  // Increased token limit
+        temperature: 0.01       // Further reduced for more consistency
       }
     })
 
@@ -39,7 +39,7 @@ serve(async (req) => {
     console.log('Generating meal plan with prompt:', prompt)
 
     let retryCount = 0
-    const maxRetries = 3
+    const maxRetries = 5  // Increased max retries
     const baseDelay = 1000 // 1 second base delay
     let lastError = null
 
@@ -97,14 +97,13 @@ serve(async (req) => {
         retryCount++
         
         if (retryCount < maxRetries) {
-          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 10000) // Cap at 10 seconds
+          const delay = Math.min(baseDelay * Math.pow(2, retryCount), 15000) // Cap at 15 seconds
           console.log(`Retrying in ${delay}ms... (${retryCount}/${maxRetries})`)
           await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
     }
 
-    // If we've exhausted all retries, throw the last error
     throw new Error(`Failed after ${maxRetries} attempts. Last error: ${lastError?.message}`)
 
   } catch (error) {
