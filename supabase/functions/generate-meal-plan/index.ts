@@ -8,8 +8,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+type Meal = {
+  name: string
+  type: "breakfast" | "lunch" | "dinner" | "snack"
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  description: string
+}
+
+type DayPlan = {
+  day: string
+  meals: Meal[]
+}
+
+type MealPlan = {
+  days: DayPlan[]
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -27,98 +45,99 @@ serve(async (req) => {
     const { weeklyPlanId, preferences } = await req.json()
     console.log('Received request for weekly plan:', weeklyPlanId, 'with preferences:', preferences)
 
-    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const prompt = `Generate a 7-day meal plan with ${preferences.mealsPerDay} meals per day. Each meal must be REALISTIC and SIMPLE. 
+    const prompt = `Generate a 7-day meal plan with ${preferences.mealsPerDay} meals per day that follows these specifications EXACTLY:
     Diet type: ${preferences.dietType}
     Health goal: ${preferences.healthGoal}
     ${preferences.ingredients ? `Include these ingredients where possible: ${preferences.ingredients}` : ''}
     
-    Return ONLY A VALID JSON object that matches this structure exactly:
+    Response format:
+    - Each meal MUST have these exact fields: name, type, calories, protein, carbs, fat, description
+    - All numeric values MUST be numbers (not strings)
+    - The "type" field must be exactly one of: "breakfast", "lunch", "dinner", "snack"
+    - The "day" field must be a capitalized day name: Monday, Tuesday, etc.
+    - Include exactly 7 days starting from Monday
+    - Each day must have exactly ${preferences.mealsPerDay} meals
+    - Keep descriptions under 50 characters
+    - All field values must be properly quoted strings or numbers
+    - Names should be concise (under 30 characters)
+    - DO NOT include any explanation text or markdown formatting
+    
+    Return ONLY a valid JSON object with this structure:
     {
       "days": [
         {
           "day": "Monday",
           "meals": [
             {
-              "name": "meal name",
+              "name": "Meal name",
               "type": "breakfast",
               "calories": 500,
               "protein": 20,
               "carbs": 30,
               "fat": 15,
-              "description": "brief description"
+              "description": "Brief description"
             }
           ]
         }
       ]
-    }
-    
-    Rules:
-    1. All numeric values must be numbers, not strings
-    2. The "type" field must be one of: "breakfast", "lunch", "dinner", "snack"
-    3. The "day" field must be a capitalized day name: Monday, Tuesday, etc.
-    4. Include exactly 7 days in order starting from Monday
-    5. Each day must have exactly ${preferences.mealsPerDay} meals
-    6. All fields are required for each meal
-    7. Keep meal names and descriptions SHORT AND CONCISE
-    8. Descriptions should be under 50 characters
-    9. DO NOT add any markdown formatting, quotes, or explanation text - JUST THE JSON OBJECT`
+    }`
 
     console.log('Generating meal plan with prompt:', prompt)
 
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        maxOutputTokens: 2048,
-        temperature: 0.4
-      },
-      safetySettings: [
-        {
-          category: 'HARM_CATEGORY_HARASSMENT',
-          threshold: 'BLOCK_NONE',
-        },
-      ],
-    })
-
+    const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
     
-    console.log('Received raw response from Gemini:', text)
+    console.log('Raw response from Gemini:', text)
 
     try {
-      // Clean the response by removing any markdown formatting or extra text
-      let cleanedText = text
-        .replace(/```json\s*/, '') // Remove opening markdown
-        .replace(/```\s*$/, '')    // Remove closing markdown
-        .replace(/^[\s\n]*{/, '{') // Clean leading whitespace
+      // Clean the response text
+      const cleanedText = text
+        .replace(/```json\s*|\s*```/g, '') // Remove markdown
+        .replace(/^[\s\n]*{/, '{')        // Clean leading whitespace
         .trim()
       
       console.log('Cleaned JSON text:', cleanedText)
       
-      const mealPlan = JSON.parse(cleanedText)
+      // Parse and validate the JSON structure
+      const mealPlan = JSON.parse(cleanedText) as MealPlan
 
-      // Validate the structure
+      // Validate meal plan structure
       if (!mealPlan.days || !Array.isArray(mealPlan.days)) {
         throw new Error('Invalid meal plan structure: missing days array')
       }
 
+      if (mealPlan.days.length !== 7) {
+        throw new Error(`Expected 7 days, got ${mealPlan.days.length}`)
+      }
+
       // Store each daily plan
       for (const day of mealPlan.days) {
+        // Validate day structure
         if (!day.day || !day.meals || !Array.isArray(day.meals)) {
           console.error('Invalid day structure:', day)
           throw new Error(`Invalid structure for day: ${day.day}`)
         }
 
+        if (day.meals.length !== parseInt(preferences.mealsPerDay)) {
+          throw new Error(`Expected ${preferences.mealsPerDay} meals for ${day.day}, got ${day.meals.length}`)
+        }
+
         // Validate each meal
         for (const meal of day.meals) {
-          if (!meal.name || !meal.type || typeof meal.calories !== 'number' || 
-              typeof meal.protein !== 'number' || typeof meal.carbs !== 'number' || 
-              typeof meal.fat !== 'number' || !meal.description) {
+          if (!meal.name || typeof meal.name !== 'string' ||
+              !meal.type || typeof meal.type !== 'string' ||
+              !['breakfast', 'lunch', 'dinner', 'snack'].includes(meal.type) ||
+              typeof meal.calories !== 'number' ||
+              typeof meal.protein !== 'number' ||
+              typeof meal.carbs !== 'number' ||
+              typeof meal.fat !== 'number' ||
+              !meal.description || typeof meal.description !== 'string') {
             console.error('Invalid meal structure:', meal)
             throw new Error(`Invalid meal structure in ${day.day}`)
           }
@@ -139,38 +158,56 @@ serve(async (req) => {
           console.error(`Error saving daily plan for ${day.day}:`, dailyPlanError)
           throw dailyPlanError
         }
+        
         console.log(`Saved daily plan for ${day.day}:`, dailyPlan)
       }
 
       return new Response(
-        JSON.stringify({ success: true, message: 'Meal plan generated and saved successfully' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: true, 
+          message: 'Meal plan generated and saved successfully' 
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
       )
+
     } catch (parseError) {
-      console.error('Failed to parse Gemini response:', parseError)
-      console.error('Response that failed to parse:', text)
+      console.error('Failed to parse or validate meal plan:', parseError)
+      console.error('Response that failed:', text)
+      
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to parse meal plan data', 
+          error: 'Failed to parse or validate meal plan data', 
           details: parseError.message,
           rawResponse: text 
         }),
         { 
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          }
         }
       )
     }
+
   } catch (error) {
     console.error('Error in generate-meal-plan function:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: error.stack
+        details: error.stack 
       }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        }
       }
     )
   }
