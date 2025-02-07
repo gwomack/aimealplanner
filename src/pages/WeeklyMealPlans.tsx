@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -7,10 +6,22 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/AuthProvider"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Link } from "react-router-dom"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import { useState } from "react"
+
+const ITEMS_PER_PAGE = 6
 
 export default function WeeklyMealPlans() {
   const { session } = useAuth()
   const { toast } = useToast()
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data: weeklyPlans, isLoading } = useQuery({
     queryKey: ["weeklyPlans"],
@@ -62,6 +73,13 @@ export default function WeeklyMealPlans() {
     )
   }
 
+  // Pagination calculations
+  const totalPlans = weeklyPlans?.length || 0
+  const totalPages = Math.ceil(totalPlans / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentPlans = weeklyPlans?.slice(startIndex, endIndex) || []
+
   return (
     <div className="container mx-auto py-8 space-y-8">
       {/* Header with floating food icons */}
@@ -85,40 +103,78 @@ export default function WeeklyMealPlans() {
         </div>
       </div>
 
-      {weeklyPlans && weeklyPlans.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto pb-4">
-          {weeklyPlans.map((plan) => (
-            <Card 
-              key={plan.id}
-              className="relative group hover:shadow-lg transition-all duration-300 border border-white/10 backdrop-blur-sm bg-gradient-to-br from-black/40 to-black/20"
-            >
-              <div className="absolute -top-3 -right-3 h-8 w-8 rounded-full bg-gradient-to-r from-[#F97316] to-[#D946EF] flex items-center justify-center">
-                <UtensilsCrossed className="h-4 w-4 text-white" />
-              </div>
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold bg-gradient-to-r from-[#F97316] via-[#D946EF] to-[#8B5CF6] bg-clip-text text-transparent">
-                  {plan.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Created on {new Date(plan.created_at).toLocaleDateString()}
-                </p>
-              </CardContent>
-              <CardFooter>
-                <Link to={`/plans/${plan.id}`} className="w-full">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full group-hover:bg-gradient-to-r group-hover:from-[#F97316] group-hover:to-[#D946EF] group-hover:text-white transition-all duration-300"
-                  >
-                    View Details
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+      {currentPlans.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto pb-4">
+            {currentPlans.map((plan) => (
+              <Card 
+                key={plan.id}
+                className="relative group hover:shadow-lg transition-all duration-300 border border-white/10 backdrop-blur-sm bg-gradient-to-br from-black/40 to-black/20"
+              >
+                <div className="absolute -top-3 -right-3 h-8 w-8 rounded-full bg-gradient-to-r from-[#F97316] to-[#D946EF] flex items-center justify-center">
+                  <UtensilsCrossed className="h-4 w-4 text-white" />
+                </div>
+                <CardHeader>
+                  <CardTitle className="text-xl font-semibold bg-gradient-to-r from-[#F97316] via-[#D946EF] to-[#8B5CF6] bg-clip-text text-transparent">
+                    {plan.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Created on {new Date(plan.created_at).toLocaleDateString()}
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Link to={`/plans/${plan.id}`} className="w-full">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="w-full group-hover:bg-gradient-to-r group-hover:from-[#F97316] group-hover:to-[#D946EF] group-hover:text-white transition-all duration-300"
+                    >
+                      View Details
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => setCurrentPage(page)}
+                      isActive={currentPage === page}
+                      className={
+                        currentPage === page
+                          ? "bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white"
+                          : ""
+                      }
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </>
       ) : (
         <Card className="text-center py-12 border border-white/10 backdrop-blur-sm bg-gradient-to-br from-black/40 to-black/20">
           <CardContent className="space-y-4">
