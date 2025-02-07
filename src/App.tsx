@@ -14,32 +14,47 @@ import Profile from "./pages/Profile"
 import Auth from "./pages/Auth"
 import NotFound from "./pages/NotFound"
 import Index from "./pages/Index"
+import { useMemo } from "react"
 
-const queryClient = new QueryClient()
+const App = () => {
+  // Create a stable queryClient instance
+  const queryClient = useMemo(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: 1,
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+    []
+  )
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route element={<RootLayout />}>
-              <Route path="/plans" element={<WeeklyMealPlans />} />
-              <Route path="/plans/:id" element={<MealPlanDetail />} />
-              <Route path="/generate" element={<CreatePlan />} />
-              <Route path="/ingredients" element={<Ingredients />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-)
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route element={<RootLayout />}>
+                <Route path="/plans" element={<WeeklyMealPlans />} />
+                <Route path="/plans/:id" element={<MealPlanDetail />} />
+                <Route path="/generate" element={<CreatePlan />} />
+                <Route path="/ingredients" element={<Ingredients />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  )
+}
 
 export default App
