@@ -1,7 +1,4 @@
 
-import { Plus, Search, Tag, Trash } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Card,
   CardContent,
@@ -9,7 +6,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import {
   Pagination,
   PaginationContent,
@@ -20,6 +16,9 @@ import {
 } from "@/components/ui/pagination"
 import { type Ingredient } from "./types"
 import { UseMutationResult } from "@tanstack/react-query"
+import { AddIngredientForm } from "./AddIngredientForm"
+import { SearchIngredients } from "./SearchIngredients"
+import { IngredientListItem } from "./IngredientListItem"
 
 interface IngredientsCardProps {
   newIngredient: string
@@ -59,65 +58,25 @@ export function IngredientsCard({
         <CardDescription>Manage your ingredients</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-2 mb-4">
-          <Input
-            placeholder="Add new ingredient"
-            value={newIngredient}
-            onChange={(e) => setNewIngredient(e.target.value)}
-          />
-          <Button onClick={() => addIngredient.mutate()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add
-          </Button>
-        </div>
+        <AddIngredientForm
+          newIngredient={newIngredient}
+          setNewIngredient={setNewIngredient}
+          addIngredient={addIngredient}
+        />
         
-        <div className="flex items-center gap-2 mb-4">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search ingredients"
-            value={ingredientSearch}
-            onChange={(e) => setIngredientSearch(e.target.value)}
-          />
-        </div>
+        <SearchIngredients
+          ingredientSearch={ingredientSearch}
+          setIngredientSearch={setIngredientSearch}
+        />
 
         <div className="space-y-2 mb-4">
           {ingredients?.map((ingredient) => (
-            <div
+            <IngredientListItem
               key={ingredient.id}
-              className="flex items-center justify-between p-2 rounded-lg border bg-card"
-            >
-              <div className="flex items-center gap-2">
-                <span>{ingredient.name}</span>
-                <div className="flex gap-1">
-                  {ingredient.ingredients_to_tags?.map((relation) => (
-                    <Badge
-                      key={relation.tag_id}
-                      variant="secondary"
-                      className="text-xs flex items-center gap-1"
-                    >
-                      <Tag className="h-3 w-3" />
-                      {relation.ingredients_tags.name}
-                      <button
-                        onClick={() => removeTagFromIngredient.mutate({
-                          ingredientId: ingredient.id,
-                          tagId: relation.tag_id
-                        })}
-                        className="ml-1 hover:bg-secondary-foreground/10 rounded-full p-0.5"
-                      >
-                        <Trash className="h-3 w-3 text-destructive" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => deleteIngredient.mutate(ingredient.id)}
-              >
-                <Trash className="h-4 w-4 text-destructive" />
-              </Button>
-            </div>
+              ingredient={ingredient}
+              deleteIngredient={deleteIngredient}
+              removeTagFromIngredient={removeTagFromIngredient}
+            />
           ))}
         </div>
 
