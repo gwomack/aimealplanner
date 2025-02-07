@@ -335,22 +335,33 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          meal_preference_id: string | null
           name: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          meal_preference_id?: string | null
           name?: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          meal_preference_id?: string | null
           name?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "weekly_meal_plans_meal_preference_id_fkey"
+            columns: ["meal_preference_id"]
+            isOneToOne: false
+            referencedRelation: "meal_preferences"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

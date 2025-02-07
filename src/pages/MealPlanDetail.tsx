@@ -34,7 +34,15 @@ const MealPlanDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("weekly_meal_plans")
-        .select("*, meal_preferences!inner(*)")
+        .select(`
+          *,
+          meal_preferences:meal_preference_id (
+            diet_type,
+            health_goal,
+            meals_per_day,
+            activity_level
+          )
+        `)
         .eq("id", id)
         .single()
 
