@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Plus, Apple, Carrot, Pizza, CakeSlice, ChefHat, UtensilsCrossed } from "lucide-react"
+import { Plus, Apple, Carrot, Pizza, CakeSlice, ChefHat, UtensilsCrossed, Search } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/AuthProvider"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Link } from "react-router-dom"
+import { Input } from "@/components/ui/input"
 import {
   Pagination,
   PaginationContent,
@@ -22,6 +23,7 @@ export default function WeeklyMealPlans() {
   const { session } = useAuth()
   const { toast } = useToast()
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const { data: weeklyPlans, isLoading } = useQuery({
     queryKey: ["weeklyPlans"],
@@ -73,12 +75,17 @@ export default function WeeklyMealPlans() {
     )
   }
 
+  // Filter plans based on search query
+  const filteredPlans = weeklyPlans?.filter(plan =>
+    plan.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || []
+
   // Pagination calculations
-  const totalPlans = weeklyPlans?.length || 0
+  const totalPlans = filteredPlans.length
   const totalPages = Math.ceil(totalPlans / ITEMS_PER_PAGE)
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
   const endIndex = startIndex + ITEMS_PER_PAGE
-  const currentPlans = weeklyPlans?.slice(startIndex, endIndex) || []
+  const currentPlans = filteredPlans.slice(startIndex, endIndex)
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -101,6 +108,21 @@ export default function WeeklyMealPlans() {
             New Plan
           </Button>
         </div>
+      </div>
+
+      {/* Search input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search plans..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value)
+            setCurrentPage(1) // Reset to first page when searching
+          }}
+          className="pl-10"
+        />
       </div>
 
       {currentPlans.length > 0 ? (
@@ -183,7 +205,9 @@ export default function WeeklyMealPlans() {
               <ChefHat className="h-12 w-12 text-[#D946EF] animate-bounce delay-100" />
               <UtensilsCrossed className="h-12 w-12 text-[#8B5CF6] animate-bounce delay-200" />
             </div>
-            <p className="text-muted-foreground">No meal plans yet</p>
+            <p className="text-muted-foreground">
+              {searchQuery ? "No meal plans found matching your search" : "No meal plans yet"}
+            </p>
             <Button 
               onClick={handleCreatePlan} 
               variant="outline"
