@@ -1,7 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { LogOut, Settings, User } from "lucide-react"
+import { LogOut, Settings, User, Salad } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import Navigation from "./Navigation"
@@ -70,12 +70,8 @@ export default function RootLayout() {
             onClick={() => navigate("/plans")}
           >
             <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gradient-to-br from-[#F97316] via-[#D946EF] to-[#8B5CF6] p-[2px]">
-              <div className="w-full h-full rounded-full overflow-hidden">
-                <img 
-                  src="/meal-planner-logo.png" 
-                  alt="Meal Planner Logo" 
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-full h-full bg-background rounded-full flex items-center justify-center">
+                <Salad className="w-6 h-6 text-foreground" />
               </div>
             </div>
             <div className="flex flex-col">
