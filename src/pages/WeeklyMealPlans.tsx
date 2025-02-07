@@ -6,6 +6,7 @@ import { Plus, Apple, Carrot, Pizza, CakeSlice, ChefHat, UtensilsCrossed } from 
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/AuthProvider"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { Link } from "react-router-dom"
 
 export default function WeeklyMealPlans() {
   const { session } = useAuth()
@@ -86,7 +87,7 @@ export default function WeeklyMealPlans() {
 
       {weeklyPlans && weeklyPlans.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto pb-4">
-          {weeklyPlans.map((plan, index) => (
+          {weeklyPlans.map((plan) => (
             <Card 
               key={plan.id}
               className="relative group hover:shadow-lg transition-all duration-300 border border-white/10 backdrop-blur-sm bg-gradient-to-br from-black/40 to-black/20"
@@ -105,13 +106,15 @@ export default function WeeklyMealPlans() {
                 </p>
               </CardContent>
               <CardFooter>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full group-hover:bg-gradient-to-r group-hover:from-[#F97316] group-hover:to-[#D946EF] group-hover:text-white transition-all duration-300"
-                >
-                  View Details
-                </Button>
+                <Link to={`/plans/${plan.id}`} className="w-full">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full group-hover:bg-gradient-to-r group-hover:from-[#F97316] group-hover:to-[#D946EF] group-hover:text-white transition-all duration-300"
+                  >
+                    View Details
+                  </Button>
+                </Link>
               </CardFooter>
             </Card>
           ))}
