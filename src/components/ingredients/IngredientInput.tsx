@@ -65,7 +65,7 @@ export function IngredientInput({
                 placeholder="Type ingredient and press Enter or comma to add"
               />
               {showSuggestions && (currentIngredient.length > 0) && (
-                <Command className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-popover">
+                <Command className="absolute top-full left-0 right-0 z-50 mt-1 border rounded-lg bg-popover max-h-[300px] overflow-y-auto">
                   <CommandList>
                     {ingredientSuggestions.length > 0 && (
                       <CommandGroup heading="Ingredients">
