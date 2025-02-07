@@ -20,27 +20,27 @@ interface PlanParametersProps {
 
 export const PlanParameters = ({ mealPreferences }: PlanParametersProps) => {
   return (
-    <Card className="bg-gradient-to-br from-[#9b87f5] to-[#D6BCFA] border-none shadow-lg">
+    <Card className="bg-card border-border/40 shadow-lg">
       <CardHeader>
-        <CardTitle className="text-white">Meal Plan Parameters</CardTitle>
-        <CardDescription className="text-white/80">Generated meal plan settings</CardDescription>
+        <CardTitle className="text-foreground">Meal Plan Parameters</CardTitle>
+        <CardDescription>Generated meal plan settings</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-          <span className="font-medium text-white">Diet Type: </span>
-          <span className="text-white/90">{mealPreferences.diet_type}</span>
+        <div className="bg-muted rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-foreground">Diet Type: </span>
+          <span className="text-muted-foreground">{mealPreferences.diet_type}</span>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-          <span className="font-medium text-white">Health Goal: </span>
-          <span className="text-white/90">{mealPreferences.health_goal}</span>
+        <div className="bg-muted rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-foreground">Health Goal: </span>
+          <span className="text-muted-foreground">{mealPreferences.health_goal}</span>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-          <span className="font-medium text-white">Meals per Day: </span>
-          <span className="text-white/90">{mealPreferences.meals_per_day}</span>
+        <div className="bg-muted rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-foreground">Meals per Day: </span>
+          <span className="text-muted-foreground">{mealPreferences.meals_per_day}</span>
         </div>
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
-          <span className="font-medium text-white">Activity Level: </span>
-          <span className="text-white/90">{mealPreferences.activity_level}</span>
+        <div className="bg-muted rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-foreground">Activity Level: </span>
+          <span className="text-muted-foreground">{mealPreferences.activity_level}</span>
         </div>
       </CardContent>
     </Card>
