@@ -9,7 +9,8 @@ import { MealCard } from "@/components/meal-plan/MealCard"
 
 const MealPlanDetail = () => {
   const { id } = useParams<{ id: string }>()
-  const [selectedDay, setSelectedDay] = useState<string>("Monday")
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const [selectedDay, setSelectedDay] = useState<string>(today)
 
   // Fetch weekly plan details
   const { data: weeklyPlan } = useQuery({
@@ -72,4 +73,3 @@ const MealPlanDetail = () => {
 }
 
 export default MealPlanDetail
-
