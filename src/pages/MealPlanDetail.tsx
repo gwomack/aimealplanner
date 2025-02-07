@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -88,6 +87,21 @@ const MealPlanDetail = () => {
     enabled: !!session?.user.id,
   })
 
+  // Fetch excluded ingredients
+  const { data: excludedIngredients } = useQuery({
+    queryKey: ["excludedIngredients", session?.user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("excluded_ingredients")
+        .select("ingredient")
+        .eq("user_id", session?.user.id)
+
+      if (error) throw error
+      return data?.map(item => item.ingredient) || []
+    },
+    enabled: !!session?.user.id,
+  })
+
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6 text-foreground">{weeklyPlan?.name || 'Loading...'}</h1>
@@ -155,6 +169,28 @@ const MealPlanDetail = () => {
               </CardContent>
             </Card>
           )}
+
+          <Card className="bg-[#1A1F2C] shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-foreground">Excluded Ingredients</CardTitle>
+              <CardDescription>Ingredients you prefer to avoid</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {excludedIngredients?.map((ingredient, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#221F26] text-muted-foreground border border-[#EF4444]/20 hover:bg-[#2A262F] transition-colors"
+                  >
+                    {ingredient}
+                  </span>
+                ))}
+                {!excludedIngredients?.length && (
+                  <div className="text-muted-foreground text-sm">No excluded ingredients</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-4">
@@ -168,4 +204,3 @@ const MealPlanDetail = () => {
 }
 
 export default MealPlanDetail
-
