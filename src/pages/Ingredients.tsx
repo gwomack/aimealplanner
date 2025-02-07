@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Tag, Trash } from "lucide-react"
+import { Plus, Tag, Trash, Search } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,7 @@ export default function Ingredients() {
   const queryClient = useQueryClient()
   const [newIngredient, setNewIngredient] = useState("")
   const [newTag, setNewTag] = useState("")
+  const [tagSearch, setTagSearch] = useState("")
 
   // Fetch ingredients (RLS will automatically filter to user's own ingredients)
   const { data: ingredients } = useQuery({
@@ -114,6 +115,24 @@ export default function Ingredients() {
     },
   })
 
+  // Delete tag mutation
+  const deleteTag = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("ingredients_tags")
+        .delete()
+        .eq("id", id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ingredient-tags", "ingredients"] })
+      toast({
+        title: "Success",
+        description: "Tag deleted successfully",
+      })
+    },
+  })
+
   // Remove tag from ingredient mutation
   const removeTagFromIngredient = useMutation({
     mutationFn: async ({ ingredientId, tagId }: { ingredientId: string; tagId: string }) => {
@@ -132,6 +151,10 @@ export default function Ingredients() {
       })
     },
   })
+
+  const filteredTags = tags?.filter(tag => 
+    tag.name.toLowerCase().includes(tagSearch.toLowerCase())
+  )
 
   return (
     <div className="container mx-auto py-6">
@@ -201,7 +224,7 @@ export default function Ingredients() {
         <Card className="bg-card">
           <CardHeader>
             <CardTitle>Tags</CardTitle>
-            <CardDescription>Create tags to group ingredients</CardDescription>
+            <CardDescription>Create and manage tags</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 mb-4">
@@ -215,11 +238,31 @@ export default function Ingredients() {
                 Add
               </Button>
             </div>
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search tags"
+                  value={tagSearch}
+                  onChange={(e) => setTagSearch(e.target.value)}
+                />
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {tags?.map((tag) => (
-                <Badge key={tag.id} variant="secondary">
-                  <Tag className="h-3 w-3 mr-1" />
+              {filteredTags?.map((tag) => (
+                <Badge 
+                  key={tag.id} 
+                  variant="secondary"
+                  className="flex items-center gap-2"
+                >
+                  <Tag className="h-3 w-3" />
                   {tag.name}
+                  <button
+                    onClick={() => deleteTag.mutate(tag.id)}
+                    className="hover:bg-secondary-foreground/10 rounded-full p-0.5"
+                  >
+                    <Trash className="h-3 w-3 text-destructive" />
+                  </button>
                 </Badge>
               ))}
             </div>
