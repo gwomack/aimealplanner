@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Session } from "@supabase/supabase-js"
@@ -21,6 +20,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
+      if (session) {
+        navigate("/plans")
+      }
       setLoading(false)
     })
 
@@ -31,6 +33,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session)
       if (!session) {
         navigate("/auth")
+      } else {
+        navigate("/plans")
       }
     })
 
