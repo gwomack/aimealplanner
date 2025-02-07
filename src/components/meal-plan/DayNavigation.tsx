@@ -4,13 +4,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const DAYS_OF_WEEK = [
+  "Sunday",
   "Monday",
   "Tuesday",
   "Wednesday",
   "Thursday",
   "Friday",
   "Saturday",
-  "Sunday",
 ]
 
 interface DayNavigationProps {
@@ -65,4 +65,3 @@ export const DayNavigation = ({ selectedDay, setSelectedDay }: DayNavigationProp
     </div>
   )
 }
-
