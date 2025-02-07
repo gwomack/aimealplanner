@@ -53,6 +53,8 @@ const MealPlanDetail = () => {
 
   return (
     <div className="container mx-auto py-6">
+      <h1 className="text-3xl font-bold mb-6 text-foreground">{weeklyPlan?.name || 'Loading...'}</h1>
+      
       <DayNavigation selectedDay={selectedDay} setSelectedDay={setSelectedDay} />
 
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
