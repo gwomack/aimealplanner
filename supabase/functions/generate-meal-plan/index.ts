@@ -33,13 +33,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Generate the meal plan prompt with more explicit formatting instructions
     const prompt = `Generate a 7-day meal plan with ${preferences.mealsPerDay} meals per day. Each meal must be REALISTIC and SIMPLE. 
     Diet type: ${preferences.dietType}
     Health goal: ${preferences.healthGoal}
     ${preferences.ingredients ? `Include these ingredients where possible: ${preferences.ingredients}` : ''}
     
-    Respond with JSON that matches this EXACT structure:
+    Return ONLY A VALID JSON object that matches this structure exactly:
     {
       "days": [
         {
@@ -68,11 +67,10 @@ serve(async (req) => {
     6. All fields are required for each meal
     7. Keep meal names and descriptions SHORT AND CONCISE
     8. Descriptions should be under 50 characters
-    9. DO NOT add any markdown formatting or extra text, JUST THE JSON`
+    9. DO NOT add any markdown formatting, quotes, or explanation text - JUST THE JSON OBJECT`
 
     console.log('Generating meal plan with prompt:', prompt)
 
-    // Generate content with safety settings and streaming disabled
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
@@ -93,14 +91,16 @@ serve(async (req) => {
     console.log('Received raw response from Gemini:', text)
 
     try {
-      // Try to clean the response in case there's any markdown or extra text
-      const jsonStartIndex = text.indexOf('{')
-      const jsonEndIndex = text.lastIndexOf('}') + 1
-      const jsonText = text.slice(jsonStartIndex, jsonEndIndex)
+      // Clean the response by removing any markdown formatting or extra text
+      let cleanedText = text
+        .replace(/```json\s*/, '') // Remove opening markdown
+        .replace(/```\s*$/, '')    // Remove closing markdown
+        .replace(/^[\s\n]*{/, '{') // Clean leading whitespace
+        .trim()
       
-      console.log('Attempting to parse cleaned JSON:', jsonText)
+      console.log('Cleaned JSON text:', cleanedText)
       
-      const mealPlan = JSON.parse(jsonText)
+      const mealPlan = JSON.parse(cleanedText)
 
       // Validate the structure
       if (!mealPlan.days || !Array.isArray(mealPlan.days)) {
@@ -116,7 +116,9 @@ serve(async (req) => {
 
         // Validate each meal
         for (const meal of day.meals) {
-          if (!meal.name || !meal.type || !meal.calories || !meal.protein || !meal.carbs || !meal.fat || !meal.description) {
+          if (!meal.name || !meal.type || typeof meal.calories !== 'number' || 
+              typeof meal.protein !== 'number' || typeof meal.carbs !== 'number' || 
+              typeof meal.fat !== 'number' || !meal.description) {
             console.error('Invalid meal structure:', meal)
             throw new Error(`Invalid meal structure in ${day.day}`)
           }
@@ -126,7 +128,7 @@ serve(async (req) => {
           .from('daily_meal_plans')
           .insert({
             weekly_plan_id: weeklyPlanId,
-            day_of_week: day.day, // Remove toLowerCase() to maintain the proper case
+            day_of_week: day.day,
             meals: day.meals,
             model_provider: 'gemini'
           })
