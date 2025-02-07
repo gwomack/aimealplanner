@@ -22,8 +22,8 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-pro',
       generationConfig: {
-        maxOutputTokens: 30000, // Increased to handle larger responses
-        temperature: 0.3 // Reduced for more consistent output
+        maxOutputTokens: 30000,
+        temperature: 0.1 // Reduced for more consistent output
       }
     })
 
@@ -38,79 +38,81 @@ serve(async (req) => {
     const prompt = generateMealPlanPrompt(preferences)
     console.log('Generating meal plan with prompt:', prompt)
 
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const text = response.text()
-    
-    console.log('Raw response from Gemini:', text)
+    let retryCount = 0
+    const maxRetries = 3
+    let lastError = null
 
-    try {
-      const cleanedText = cleanJsonResponse(text)
-      console.log('Cleaned JSON text:', cleanedText)
-      
-      const mealPlan = JSON.parse(cleanedText) as MealPlan
-      validateMealPlan(mealPlan, parseInt(preferences.mealsPerDay))
-
-      // Store each daily plan
-      for (const day of mealPlan.days) {
-        const { data: dailyPlan, error: dailyPlanError } = await supabaseClient
-          .from('daily_meal_plans')
-          .insert({
-            weekly_plan_id: weeklyPlanId,
-            day_of_week: day.day,
-            meals: day.meals,
-            model_provider: 'gemini'
-          })
-          .select()
-          .single()
-
-        if (dailyPlanError) {
-          console.error(`Error saving daily plan for ${day.day}:`, dailyPlanError)
-          throw dailyPlanError
-        }
+    while (retryCount < maxRetries) {
+      try {
+        const result = await model.generateContent(prompt)
+        const response = await result.response
+        const text = response.text()
         
-        console.log(`Saved daily plan for ${day.day}:`, dailyPlan)
-      }
+        console.log('Raw response from Gemini:', text)
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Meal plan generated and saved successfully' 
-        }),
-        { 
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
-          } 
-        }
-      )
+        const cleanedText = cleanJsonResponse(text)
+        console.log('Cleaned JSON text:', cleanedText)
+        
+        const mealPlan = JSON.parse(cleanedText) as MealPlan
+        validateMealPlan(mealPlan, parseInt(preferences.mealsPerDay))
 
-    } catch (parseError) {
-      console.error('Failed to parse or validate meal plan:', parseError)
-      console.error('Response that failed:', text)
-      
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to parse or validate meal plan data', 
-          details: parseError.message,
-          rawResponse: text 
-        }),
-        { 
-          status: 500,
-          headers: { 
-            ...corsHeaders, 
-            'Content-Type': 'application/json' 
+        // Store each daily plan
+        for (const day of mealPlan.days) {
+          const { data: dailyPlan, error: dailyPlanError } = await supabaseClient
+            .from('daily_meal_plans')
+            .insert({
+              weekly_plan_id: weeklyPlanId,
+              day_of_week: day.day,
+              meals: day.meals,
+              model_provider: 'gemini'
+            })
+            .select()
+            .single()
+
+          if (dailyPlanError) {
+            console.error(`Error saving daily plan for ${day.day}:`, dailyPlanError)
+            throw dailyPlanError
           }
+          
+          console.log(`Saved daily plan for ${day.day}:`, dailyPlan)
         }
-      )
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Meal plan generated and saved successfully' 
+          }),
+          { 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json' 
+            } 
+          }
+        )
+
+      } catch (error) {
+        console.error(`Attempt ${retryCount + 1} failed:`, error)
+        lastError = error
+        retryCount++
+        
+        if (retryCount < maxRetries) {
+          console.log(`Retrying... (${retryCount}/${maxRetries})`)
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000))
+        }
+      }
     }
+
+    // If we've exhausted all retries, throw the last error
+    throw new Error(`Failed after ${maxRetries} attempts. Last error: ${lastError?.message}`)
 
   } catch (error) {
     console.error('Error in generate-meal-plan function:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: error.stack 
+        details: error.cause?.message || error.stack,
+        rawResponse: error.rawResponse 
       }),
       { 
         status: 500,
