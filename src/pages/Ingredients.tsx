@@ -114,6 +114,25 @@ export default function Ingredients() {
     },
   })
 
+  // Remove tag from ingredient mutation
+  const removeTagFromIngredient = useMutation({
+    mutationFn: async ({ ingredientId, tagId }: { ingredientId: string; tagId: string }) => {
+      const { error } = await supabase
+        .from("ingredients_to_tags")
+        .delete()
+        .eq("ingredient_id", ingredientId)
+        .eq("tag_id", tagId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ingredients"] })
+      toast({
+        title: "Success",
+        description: "Tag removed from ingredient",
+      })
+    },
+  })
+
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Ingredients Management</h1>
@@ -149,10 +168,19 @@ export default function Ingredients() {
                         <Badge
                           key={relation.tag_id}
                           variant="secondary"
-                          className="text-xs"
+                          className="text-xs flex items-center gap-1"
                         >
-                          <Tag className="h-3 w-3 mr-1" />
+                          <Tag className="h-3 w-3" />
                           {relation.ingredients_tags.name}
+                          <button
+                            onClick={() => removeTagFromIngredient.mutate({
+                              ingredientId: ingredient.id,
+                              tagId: relation.tag_id
+                            })}
+                            className="ml-1 hover:bg-secondary-foreground/10 rounded-full p-0.5"
+                          >
+                            <Trash className="h-3 w-3 text-destructive" />
+                          </button>
                         </Badge>
                       ))}
                     </div>
