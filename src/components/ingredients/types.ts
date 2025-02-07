@@ -1,4 +1,3 @@
-
 import { UseFormReturn } from "react-hook-form"
 import { Database } from "@/integrations/supabase/types"
 
@@ -15,7 +14,7 @@ export type Ingredient = {
   }>
 }
 
-export type Tag = {
+export interface Tag {
   id: string
   name: string
   created_by: string
