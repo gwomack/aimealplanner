@@ -15,6 +15,16 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+
+const ITEMS_PER_PAGE = 15
 
 export default function Ingredients() {
   const { session } = useAuth()
@@ -23,12 +33,14 @@ export default function Ingredients() {
   const [newIngredient, setNewIngredient] = useState("")
   const [newTag, setNewTag] = useState("")
   const [tagSearch, setTagSearch] = useState("")
+  const [ingredientSearch, setIngredientSearch] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
 
-  // Fetch ingredients (RLS will automatically filter to user's own ingredients)
-  const { data: ingredients } = useQuery({
-    queryKey: ["ingredients"],
+  // Fetch ingredients with search and pagination
+  const { data: ingredientsData } = useQuery({
+    queryKey: ["ingredients", ingredientSearch, currentPage],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("ingredients")
         .select(`
           id,
@@ -41,19 +53,42 @@ export default function Ingredients() {
           )
         `)
         .order('name')
+        
+      // Apply search filter if search term exists
+      if (ingredientSearch) {
+        query = query.ilike('name', `%${ingredientSearch}%`)
+      }
+      
+      // Apply pagination
+      const from = (currentPage - 1) * ITEMS_PER_PAGE
+      const to = from + ITEMS_PER_PAGE - 1
+      
+      const { data, error, count } = await query
+        .range(from, to)
+        .select('*', { count: 'exact' })
+      
       if (error) throw error
-      return data
+      return { items: data, total: count || 0 }
     },
   })
 
-  // Fetch tags (RLS will automatically filter to user's own tags)
+  const ingredients = ingredientsData?.items || []
+  const totalPages = Math.ceil((ingredientsData?.total || 0) / ITEMS_PER_PAGE)
+
+  // Fetch tags
   const { data: tags } = useQuery({
-    queryKey: ["ingredient-tags"],
+    queryKey: ["ingredient-tags", tagSearch],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("ingredients_tags")
         .select("*")
         .order('name')
+      
+      if (tagSearch) {
+        query = query.ilike('name', `%${tagSearch}%`)
+      }
+      
+      const { data, error } = await query
       if (error) throw error
       return data
     },
@@ -152,10 +187,6 @@ export default function Ingredients() {
     },
   })
 
-  const filteredTags = tags?.filter(tag => 
-    tag.name.toLowerCase().includes(tagSearch.toLowerCase())
-  )
-
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Ingredients Management</h1>
@@ -178,7 +209,17 @@ export default function Ingredients() {
                 Add
               </Button>
             </div>
-            <div className="space-y-2">
+            
+            <div className="flex items-center gap-2 mb-4">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search ingredients"
+                value={ingredientSearch}
+                onChange={(e) => setIngredientSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2 mb-4">
               {ingredients?.map((ingredient) => (
                 <div
                   key={ingredient.id}
@@ -218,6 +259,35 @@ export default function Ingredients() {
                 </div>
               ))}
             </div>
+
+            {totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(page)}
+                        isActive={currentPage === page}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
           </CardContent>
         </Card>
 
@@ -249,7 +319,7 @@ export default function Ingredients() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {filteredTags?.map((tag) => (
+              {tags?.map((tag) => (
                 <Badge 
                   key={tag.id} 
                   variant="secondary"
