@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -25,6 +24,19 @@ import {
 } from "@/components/ui/pagination"
 
 const ITEMS_PER_PAGE = 15
+
+type Ingredient = {
+  id: string
+  name: string
+  created_at: string
+  created_by: string
+  ingredients_to_tags?: Array<{
+    tag_id: string
+    ingredients_tags: {
+      name: string
+    }
+  }>
+}
 
 export default function Ingredients() {
   const { session } = useAuth()
@@ -64,10 +76,9 @@ export default function Ingredients() {
       
       const { data, error, count } = await query
         .range(from, to)
-        .select('*', { count: 'exact' })
       
       if (error) throw error
-      return { items: data, total: count || 0 }
+      return { items: data as Ingredient[], total: count || 0 }
     },
   })
 
@@ -219,7 +230,7 @@ export default function Ingredients() {
             </div>
 
             <div className="space-y-2 mb-4">
-              {ingredients?.map((ingredient) => (
+              {ingredientsData?.items?.map((ingredient) => (
                 <div
                   key={ingredient.id}
                   className="flex items-center justify-between p-2 rounded-lg border bg-card"
@@ -259,7 +270,7 @@ export default function Ingredients() {
               ))}
             </div>
 
-            {totalPages > 1 && (
+            {(ingredientsData?.total || 0) > ITEMS_PER_PAGE && (
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
@@ -268,7 +279,7 @@ export default function Ingredients() {
                       className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  {Array.from({ length: Math.ceil((ingredientsData?.total || 0) / ITEMS_PER_PAGE) }, (_, i) => i + 1).map((page) => (
                     <PaginationItem key={page}>
                       <PaginationLink
                         onClick={() => setCurrentPage(page)}
@@ -280,8 +291,8 @@ export default function Ingredients() {
                   ))}
                   <PaginationItem>
                     <PaginationNext
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      onClick={() => setCurrentPage(p => Math.min(Math.ceil((ingredientsData?.total || 0) / ITEMS_PER_PAGE), p + 1))}
+                      className={currentPage === Math.ceil((ingredientsData?.total || 0) / ITEMS_PER_PAGE) ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                 </PaginationContent>
