@@ -51,6 +51,7 @@ export type Database = {
           dinner: Json | null
           id: string
           lunch: Json | null
+          model_provider: string | null
           nutritional_notes: Json | null
           snacks: Json | null
           weekly_plan_id: string
@@ -63,6 +64,7 @@ export type Database = {
           dinner?: Json | null
           id?: string
           lunch?: Json | null
+          model_provider?: string | null
           nutritional_notes?: Json | null
           snacks?: Json | null
           weekly_plan_id: string
@@ -75,6 +77,7 @@ export type Database = {
           dinner?: Json | null
           id?: string
           lunch?: Json | null
+          model_provider?: string | null
           nutritional_notes?: Json | null
           snacks?: Json | null
           weekly_plan_id?: string
