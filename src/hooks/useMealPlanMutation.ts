@@ -44,7 +44,13 @@ export function useMealPlanMutation() {
         .select()
         .single()
 
-      if (weeklyPlanError) throw weeklyPlanError
+      if (weeklyPlanError) {
+        // Check for unique constraint violation
+        if (weeklyPlanError.code === '23505') {
+          throw new Error("A meal plan with this name already exists. Please choose a different name.")
+        }
+        throw weeklyPlanError
+      }
 
       // Store the preferences
       const { error: prefError } = await supabase
