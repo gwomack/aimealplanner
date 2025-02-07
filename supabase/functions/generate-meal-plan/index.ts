@@ -126,7 +126,7 @@ serve(async (req) => {
           .from('daily_meal_plans')
           .insert({
             weekly_plan_id: weeklyPlanId,
-            day_of_week: day.day.toLowerCase(),
+            day_of_week: day.day, // Remove toLowerCase() to maintain the proper case
             meals: day.meals,
             model_provider: 'gemini'
           })
