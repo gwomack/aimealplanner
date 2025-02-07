@@ -1,34 +1,10 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus, Apple, Carrot, Pizza, CakeSlice, ChefHat } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-import { useQueryClient } from "@tanstack/react-query"
+import { useNavigate } from "react-router-dom"
 
 export const MealPlanHeader = ({ userId }: { userId: string }) => {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-
-  const handleCreatePlan = async () => {
-    const { error } = await supabase.from("weekly_meal_plans").insert({
-      name: `Meal Plan ${new Date().toLocaleDateString()}`,
-      user_id: userId,
-    })
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error creating meal plan",
-        description: error.message,
-      })
-    } else {
-      toast({
-        title: "Success",
-        description: "New meal plan created",
-      })
-      queryClient.invalidateQueries({ queryKey: ["weeklyPlans"] })
-    }
-  }
+  const navigate = useNavigate()
 
   return (
     <div className="relative">
@@ -44,7 +20,10 @@ export const MealPlanHeader = ({ userId }: { userId: string }) => {
           <ChefHat className="h-8 w-8" />
           Weekly Meal Plans
         </h1>
-        <Button onClick={handleCreatePlan} className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90">
+        <Button 
+          onClick={() => navigate('/generate')} 
+          className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90"
+        >
           <Plus className="mr-2 h-4 w-4" />
           New Plan
         </Button>
