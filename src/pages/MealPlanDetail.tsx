@@ -28,6 +28,9 @@ const DAYS_OF_WEEK = [
 const MealPlanDetail = () => {
   const { id } = useParams<{ id: string }>()
   const [selectedDay, setSelectedDay] = useState<string>("Monday")
+  
+  // Get today's day name
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
   // Fetch weekly plan details
   const { data: weeklyPlan } = useQuery({
@@ -90,8 +93,9 @@ const MealPlanDetail = () => {
               variant={day === selectedDay ? "default" : "ghost"}
               onClick={() => setSelectedDay(day)}
               className={cn(
-                "px-3 py-1 text-sm",
-                day === selectedDay && "bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white"
+                "px-3 py-1 text-sm relative",
+                day === selectedDay && "bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white",
+                day === today && "after:content-[''] after:absolute after:w-1.5 after:h-1.5 after:bg-[#F97316] after:rounded-full after:-top-0.5 after:left-1/2 after:-translate-x-1/2"
               )}
             >
               {day.slice(0, 3)}
@@ -111,6 +115,7 @@ const MealPlanDetail = () => {
         </Button>
       </div>
 
+      {/* Right Column - Plan Information */}
       <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
         {/* Left Column - Plan Information */}
         <div className="space-y-4">
