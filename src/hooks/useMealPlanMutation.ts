@@ -103,12 +103,28 @@ export function useMealPlanMutation() {
         }
       }
 
+      // Generate meal plan using Gemini
+      const { data: mealPlanResponse, error: mealPlanGenError } = await supabase.functions
+        .invoke('generate-meal-plan', {
+          body: {
+            weeklyPlanId: weeklyPlan.id,
+            preferences: {
+              dietType: values.dietType,
+              healthGoal: values.healthGoal,
+              mealsPerDay: parseInt(values.mealsPerDay),
+              ingredients: values.ingredients,
+            }
+          }
+        })
+
+      if (mealPlanGenError) throw mealPlanGenError
+
       return weeklyPlan
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Your meal plan preferences have been saved",
+        description: "Your meal plan preferences have been saved and meals are being generated",
       })
       navigate("/plans")
     },
