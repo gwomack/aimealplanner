@@ -20,30 +20,29 @@ interface PlanParametersProps {
 
 export const PlanParameters = ({ mealPreferences }: PlanParametersProps) => {
   return (
-    <Card>
+    <Card className="bg-gradient-to-br from-[#9b87f5] to-[#D6BCFA] border-none shadow-lg">
       <CardHeader>
-        <CardTitle>Meal Plan Parameters</CardTitle>
-        <CardDescription>Generated meal plan settings</CardDescription>
+        <CardTitle className="text-white">Meal Plan Parameters</CardTitle>
+        <CardDescription className="text-white/80">Generated meal plan settings</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div>
-          <span className="font-medium">Diet Type: </span>
-          {mealPreferences.diet_type}
+      <CardContent className="space-y-3">
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-white">Diet Type: </span>
+          <span className="text-white/90">{mealPreferences.diet_type}</span>
         </div>
-        <div>
-          <span className="font-medium">Health Goal: </span>
-          {mealPreferences.health_goal}
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-white">Health Goal: </span>
+          <span className="text-white/90">{mealPreferences.health_goal}</span>
         </div>
-        <div>
-          <span className="font-medium">Meals per Day: </span>
-          {mealPreferences.meals_per_day}
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-white">Meals per Day: </span>
+          <span className="text-white/90">{mealPreferences.meals_per_day}</span>
         </div>
-        <div>
-          <span className="font-medium">Activity Level: </span>
-          {mealPreferences.activity_level}
+        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 shadow-sm">
+          <span className="font-medium text-white">Activity Level: </span>
+          <span className="text-white/90">{mealPreferences.activity_level}</span>
         </div>
       </CardContent>
     </Card>
   )
 }
-
