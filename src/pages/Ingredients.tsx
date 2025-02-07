@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -62,7 +63,7 @@ export default function Ingredients() {
               name
             )
           )
-        `)
+        `, { count: 'exact' })
         .order('name')
         
       // Apply search filter if search term exists
@@ -74,8 +75,7 @@ export default function Ingredients() {
       const from = (currentPage - 1) * ITEMS_PER_PAGE
       const to = from + ITEMS_PER_PAGE - 1
       
-      const { data, error, count } = await query
-        .range(from, to)
+      const { data, error, count } = await query.range(from, to)
       
       if (error) throw error
       return { items: data as Ingredient[], total: count || 0 }
