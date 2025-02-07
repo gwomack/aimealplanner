@@ -44,42 +44,33 @@ export type Database = {
       }
       daily_meal_plans: {
         Row: {
-          breakfast: Json | null
           created_at: string
           daily_calorie_target: number | null
           day_of_week: string
-          dinner: Json | null
           id: string
-          lunch: Json | null
+          meals: Json[] | null
           model_provider: string | null
           nutritional_notes: Json | null
-          snacks: Json | null
           weekly_plan_id: string
         }
         Insert: {
-          breakfast?: Json | null
           created_at?: string
           daily_calorie_target?: number | null
           day_of_week: string
-          dinner?: Json | null
           id?: string
-          lunch?: Json | null
+          meals?: Json[] | null
           model_provider?: string | null
           nutritional_notes?: Json | null
-          snacks?: Json | null
           weekly_plan_id: string
         }
         Update: {
-          breakfast?: Json | null
           created_at?: string
           daily_calorie_target?: number | null
           day_of_week?: string
-          dinner?: Json | null
           id?: string
-          lunch?: Json | null
+          meals?: Json[] | null
           model_provider?: string | null
           nutritional_notes?: Json | null
-          snacks?: Json | null
           weekly_plan_id?: string
         }
         Relationships: [
