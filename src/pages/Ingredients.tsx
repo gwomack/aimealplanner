@@ -43,8 +43,7 @@ export default function Ingredients() {
       let query = supabase
         .from("ingredients")
         .select(`
-          id,
-          name,
+          *,
           ingredients_to_tags (
             tag_id,
             ingredients_tags (
