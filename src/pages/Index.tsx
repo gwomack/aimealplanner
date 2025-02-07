@@ -1,14 +1,73 @@
 
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/AuthProvider"
+import { useNavigate } from "react-router-dom"
 import { 
   Calendar, ChefHat, User2, Utensils, Sparkles, Leaf, ArrowRight, 
   Clock, DollarSign, Brain, Apple, Carrot, Sandwich, Pizza, 
-  CakeSlice, Coffee, Star, CheckCircle2, MessageCircle
+  CakeSlice, Coffee, Star, CheckCircle2, MessageCircle, Salad
 } from "lucide-react"
 
 const Index = () => {
+  const { session } = useAuth()
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Navigation Bar */}
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="container flex h-16 items-center justify-between px-4">
+          {/* Logo & Brand */}
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate("/")}
+          >
+            <div className="w-10 h-10 relative rounded-full overflow-hidden bg-gradient-to-br from-[#F97316] via-[#D946EF] to-[#8B5CF6] p-[2px]">
+              <div className="w-full h-full bg-background rounded-full flex items-center justify-center">
+                <Salad className="w-6 h-6 text-foreground" />
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-foreground bg-clip-text text-transparent bg-gradient-to-r from-[#F97316] via-[#D946EF] to-[#8B5CF6]">
+                Meal Planner
+              </span>
+              <span className="text-xs text-muted-foreground">AI-Powered</span>
+            </div>
+          </div>
+
+          {/* Auth Navigation */}
+          <div className="flex items-center gap-4">
+            {session ? (
+              <Button
+                variant="default"
+                className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90"
+                onClick={() => navigate("/plans")}
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => navigate("/auth", { state: { defaultTab: "signin" } })}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="default"
+                  className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90"
+                  onClick={() => navigate("/auth", { state: { defaultTab: "signup" } })}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         {/* Gradient Orbs */}

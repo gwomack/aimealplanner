@@ -1,6 +1,5 @@
-
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +15,8 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+  const defaultTab = location.state?.defaultTab || "signin"
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,7 +83,7 @@ export default function Auth() {
           <CardDescription>Sign in to start planning your meals</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin">
+          <Tabs defaultValue={defaultTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
