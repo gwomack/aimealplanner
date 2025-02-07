@@ -37,8 +37,8 @@ serve(async (req) => {
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-pro',
       generationConfig: {
-        maxOutputTokens: 2048,
-        temperature: 0.4
+        maxOutputTokens: 30000, // Increased to handle larger responses
+        temperature: 0.3 // Reduced for more consistent output
       }
     })
 
@@ -62,25 +62,25 @@ serve(async (req) => {
     - The "day" field must be a capitalized day name: Monday, Tuesday, etc.
     - Include exactly 7 days starting from Monday
     - Each day must have exactly ${preferences.mealsPerDay} meals
-    - Keep descriptions under 50 characters
+    - Keep descriptions short (under 50 characters)
+    - Keep meal names short (under 30 characters)
     - All field values must be properly quoted strings or numbers
-    - Names should be concise (under 30 characters)
-    - DO NOT include any explanation text or markdown formatting
+    - ONLY return a valid JSON object without any explanation or markdown formatting
     
-    Return ONLY a valid JSON object with this structure:
+    Example of expected format:
     {
       "days": [
         {
           "day": "Monday",
           "meals": [
             {
-              "name": "Meal name",
+              "name": "Oatmeal with Berries",
               "type": "breakfast",
-              "calories": 500,
-              "protein": 20,
-              "carbs": 30,
-              "fat": 15,
-              "description": "Brief description"
+              "calories": 300,
+              "protein": 10,
+              "carbs": 40,
+              "fat": 8,
+              "description": "Oatmeal topped with mixed berries"
             }
           ]
         }
@@ -96,11 +96,23 @@ serve(async (req) => {
     console.log('Raw response from Gemini:', text)
 
     try {
-      // Clean the response text
-      const cleanedText = text
+      // Clean the response text to handle potential truncation
+      let cleanedText = text
         .replace(/```json\s*|\s*```/g, '') // Remove markdown
         .replace(/^[\s\n]*{/, '{')        // Clean leading whitespace
         .trim()
+      
+      // If the JSON is truncated, try to fix it by adding missing closing brackets
+      if (!cleanedText.endsWith('}')) {
+        const openBraces = (cleanedText.match(/{/g) || []).length
+        const closeBraces = (cleanedText.match(/}/g) || []).length
+        const missingBraces = openBraces - closeBraces
+        
+        if (missingBraces > 0) {
+          cleanedText = cleanedText.replace(/[^}]*$/, '') // Remove truncated content
+          cleanedText += '}'.repeat(missingBraces) // Add missing closing braces
+        }
+      }
       
       console.log('Cleaned JSON text:', cleanedText)
       
@@ -130,16 +142,27 @@ serve(async (req) => {
 
         // Validate each meal
         for (const meal of day.meals) {
-          if (!meal.name || typeof meal.name !== 'string' ||
-              !meal.type || typeof meal.type !== 'string' ||
-              !['breakfast', 'lunch', 'dinner', 'snack'].includes(meal.type) ||
-              typeof meal.calories !== 'number' ||
-              typeof meal.protein !== 'number' ||
-              typeof meal.carbs !== 'number' ||
-              typeof meal.fat !== 'number' ||
-              !meal.description || typeof meal.description !== 'string') {
-            console.error('Invalid meal structure:', meal)
-            throw new Error(`Invalid meal structure in ${day.day}`)
+          // Check all required fields are present and of correct type
+          if (typeof meal.name !== 'string' || meal.name.length === 0) {
+            throw new Error(`Invalid or missing meal name in ${day.day}`)
+          }
+          if (!['breakfast', 'lunch', 'dinner', 'snack'].includes(meal.type)) {
+            throw new Error(`Invalid meal type "${meal.type}" in ${day.day}`)
+          }
+          if (typeof meal.calories !== 'number' || meal.calories <= 0) {
+            throw new Error(`Invalid calories value in ${day.day}`)
+          }
+          if (typeof meal.protein !== 'number' || meal.protein < 0) {
+            throw new Error(`Invalid protein value in ${day.day}`)
+          }
+          if (typeof meal.carbs !== 'number' || meal.carbs < 0) {
+            throw new Error(`Invalid carbs value in ${day.day}`)
+          }
+          if (typeof meal.fat !== 'number' || meal.fat < 0) {
+            throw new Error(`Invalid fat value in ${day.day}`)
+          }
+          if (typeof meal.description !== 'string' || meal.description.length === 0) {
+            throw new Error(`Invalid or missing meal description in ${day.day}`)
           }
         }
 
