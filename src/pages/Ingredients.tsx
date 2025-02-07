@@ -23,7 +23,7 @@ export default function Ingredients() {
   const [newIngredient, setNewIngredient] = useState("")
   const [newTag, setNewTag] = useState("")
 
-  // Fetch ingredients
+  // Fetch ingredients (RLS will automatically filter to user's own ingredients)
   const { data: ingredients } = useQuery({
     queryKey: ["ingredients"],
     queryFn: async () => {
@@ -39,18 +39,20 @@ export default function Ingredients() {
             )
           )
         `)
+        .order('name')
       if (error) throw error
       return data
     },
   })
 
-  // Fetch tags
+  // Fetch tags (RLS will automatically filter to user's own tags)
   const { data: tags } = useQuery({
     queryKey: ["ingredient-tags"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ingredients_tags")
         .select("*")
+        .order('name')
       if (error) throw error
       return data
     },
