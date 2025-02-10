@@ -1,69 +1,102 @@
-# Welcome to your Lovable project
+# AI Meal Planner 🍽️
 
-## Project info
+![Meal Plan](/public/screenshot-meal-plan.png)
 
-**URL**: https://lovable.dev/projects/1f0d32c6-24e4-49c6-a6b4-b87d75af161a
+## 🌟 Overview
 
-## How can I edit this code?
+A web application that generates meal plans using AI. The app takes user inputs including dietary restrictions, available ingredients, and nutritional goals to create customized daily or weekly meal plans with recipes and nutritional information.
 
-There are several ways of editing your application.
+## ✨ Features
 
-**Use Lovable**
+- 🤖 **AI-Powered Meal Generation**: Utilizes advanced AI models to create personalized meal plans
+- 🥗 **Dietary Customization**: Supports various diet types (Vegetarian, Vegan, Keto, Paleo, etc.)
+- 📊 **Nutrition Tracking**: Detailed macro and micronutrient information for each meal
+- 🏷️ **Ingredient Management**: Track your pantry and get recipes based on available ingredients
+- 📱 **Responsive Design**: Seamless experience across all devices
+- 🔐 **Secure Authentication**: Protected user data and preferences
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1f0d32c6-24e4-49c6-a6b4-b87d75af161a) and start prompting.
+## 🚀 Live Demo
 
-Changes made via Lovable will be committed automatically to this repo.
+Try it out: [Demo Link](#) *(Coming Soon)*
 
-**Use your preferred IDE**
+## 🛠️ Tech Stack
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**:
+  - Next.js 14 (App Router)
+  - Tailwind CSS
+  - shadcn/ui components
+  - Zustand (State Management)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Backend**:
+  - Supabase (Authentication & Database)
+  - PostgreSQL
 
-Follow these steps:
+- **AI Integration**:
+  - Advanced Language Models
+  - Structured JSON Output
+  - Intelligent Error Handling
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 💻 Getting Started
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Prerequisites
 
-# Step 3: Install the necessary dependencies.
-npm i
+- Node.js (v18 or higher)
+- npm or yarn
+- Supabase account
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/ai-meal-planner.git
+cd ai-meal-planner
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies
+```bash
+npm install
+# or
+yarn install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Set up environment variables
+```bash
+cp .env.example .env.local
+```
+Fill in your environment variables:
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- AI_API_KEY
 
-**Use GitHub Codespaces**
+4. Run the development server
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Visit `http://localhost:3000` to see the application.
 
-## What technologies are used for this project?
+## 📖 Usage
 
-This project is built with .
+[PLACEHOLDER: Add screenshots showing key features with step-by-step instructions]
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. **Sign Up/Login**: Create an account or login to access personalized features
+2. **Set Your Profile**: Input your demographics and dietary preferences
+3. **Add Ingredients**: (Optional) List ingredients you have available
+4. **Generate Meal Plan**: Get AI-generated meal plans tailored to your needs
+5. **View & Save**: Save your favorite meal plans for future reference
 
-## How can I deploy this project?
+## 🤝 Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/1f0d32c6-24e4-49c6-a6b4-b87d75af161a) and click on Share -> Publish.
+We welcome contributions! Please follow these steps:
 
-## I want to use a custom domain - is that possible?
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+---
+
+[PLACEHOLDER: Add badges for build status, code coverage, version, etc.]
