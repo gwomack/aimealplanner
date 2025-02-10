@@ -79,8 +79,6 @@ Visit `http://localhost:3000` to see the application.
 
 ## 📖 Usage
 
-[PLACEHOLDER: Add screenshots showing key features with step-by-step instructions]
-
 1. **Sign Up/Login**: Create an account or login to access personalized features
 2. **Set Your Profile**: Input your demographics and dietary preferences
 3. **Add Ingredients**: (Optional) List ingredients you have available
@@ -99,4 +97,11 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-[PLACEHOLDER: Add badges for build status, code coverage, version, etc.]
+![Version](https://img.shields.io/badge/version-0.0.0-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![Tailwind](https://img.shields.io/badge/Tailwind-3.0-38bdf8)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178c6)
+![Supabase](https://img.shields.io/badge/Supabase-Database-3fcf8e)
+![shadcn/ui](https://img.shields.io/badge/UI-shadcn%2Fui-000000)
+![Zustand](https://img.shields.io/badge/State-Zustand-brown)
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933)
