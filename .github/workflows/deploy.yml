@@ -20,7 +20,8 @@ jobs:
           touch .env
           echo NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
           echo NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} >> .env
-
+          cat .env
+          
       # - name: Run tests
       #   run: npm test  # Add your test command here (if any)
 
