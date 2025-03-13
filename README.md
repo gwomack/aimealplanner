@@ -13,7 +13,7 @@ A web application that generates meal plans using AI. The app takes user inputs 
 - 📊 **Nutrition Tracking**: Detailed macro and micronutrient information for each meal
 - 🏷️ **Ingredient Management**: Track your pantry and get recipes based on available ingredients
 - 📱 **Responsive Design**: Seamless experience across all devices
-- 🔐 **Secure Authentication**: Protected user data and preferences
+- 🔐 **Secure Authentication**: Protected user data and preferences with configurable registration
 
 ## 🚀 Live Demo
 
@@ -64,9 +64,9 @@ yarn install
 cp .env.example .env.local
 ```
 Fill in your environment variables:
-- NEXT_PUBLIC_SUPABASE_URL
-- NEXT_PUBLIC_SUPABASE_ANON_KEY
-- AI_API_KEY
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+- `VITE_REGISTRATION_ENABLED`: Set to 'true' to enable user registration, 'false' to disable (default: false)
 
 4. Run the development server
 ```bash
@@ -79,11 +79,29 @@ Visit `http://localhost:3000` to see the application.
 
 ## 📖 Usage
 
-1. **Sign Up/Login**: Create an account or login to access personalized features
+1. **Sign Up/Login**: 
+   - Create an account (if registration is enabled) or login to access personalized features
+   - Registration can be enabled/disabled via the `VITE_REGISTRATION_ENABLED` environment variable
 2. **Set Your Profile**: Input your demographics and dietary preferences
 3. **Add Ingredients**: (Optional) List ingredients you have available
 4. **Generate Meal Plan**: Get AI-generated meal plans tailored to your needs
 5. **View & Save**: Save your favorite meal plans for future reference
+
+## 🔒 Authentication Configuration
+
+The application supports flexible authentication configuration:
+
+### User Registration
+
+- Control user registration through the `VITE_REGISTRATION_ENABLED` environment variable
+- When disabled:
+  - Sign-up UI elements are hidden
+  - Registration endpoints return appropriate error messages
+  - Only existing users can log in
+- To enable/disable registration:
+  1. Set `VITE_REGISTRATION_ENABLED=true` or `false` in your `.env.local`
+  2. Restart the development server
+  3. Changes take effect immediately
 
 ## 🤝 Contributing
 

@@ -1,7 +1,7 @@
-
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthProvider"
 import { useNavigate } from "react-router-dom"
+import { isRegistrationEnabled } from "@/lib/env"
 import { 
   Calendar, ChefHat, User2, Utensils, Sparkles, Leaf, ArrowRight, 
   Clock, DollarSign, Brain, Apple, Carrot, Sandwich, Pizza, 
@@ -55,13 +55,15 @@ const Index = () => {
                 >
                   Sign In
                 </Button>
-                <Button
-                  variant="default"
-                  className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90"
-                  onClick={() => navigate("/auth", { state: { defaultTab: "signup" } })}
-                >
-                  Sign Up
-                </Button>
+                {isRegistrationEnabled() && (
+                  <Button
+                    variant="default"
+                    className="bg-gradient-to-r from-[#F97316] to-[#D946EF] text-white hover:opacity-90"
+                    onClick={() => navigate("/auth", { state: { defaultTab: "signup" } })}
+                  >
+                    Sign Up
+                  </Button>
+                )}
               </>
             )}
           </div>
