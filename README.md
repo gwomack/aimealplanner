@@ -1,5 +1,6 @@
 # AI Meal Planner 🍽️
 
+
 ![Meal Plan](/public/screenshot-meal-plan.png)
 
 ## 🌟 Overview
