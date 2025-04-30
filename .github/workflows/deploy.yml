@@ -3,7 +3,7 @@ name: Test and Deploy
 on:
   push:
     branches:
-      - main  # Change to your target branch (e.g., master)
+      - main
 
 jobs:
   test:
@@ -23,13 +23,13 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: 'Create env file'
+      - name: "Create env file"
         run: |
           touch .env
           echo NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
           echo NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} >> .env
           cat .env
-          
+
       # - name: Run tests
       #   run: npm test  # Add your test command here (if any)
 
@@ -51,7 +51,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: 'Create env file'
+      - name: "Create env file"
         run: |
           touch .env
           echo NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> .env
@@ -87,5 +87,5 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "dist/*"
           target: /home/s4yusv/dev/js
-          strip_components: 1  # Remove the top-level `dist` directory
+          strip_components: 1 # Remove the top-level `dist` directory
           overwrite: true

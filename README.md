@@ -16,7 +16,7 @@ A web application that generates meal plans using AI. The app takes user inputs 
 - 📱 **Responsive Design**: Seamless experience across all devices
 - 🔐 **Secure Authentication**: Protected user data and preferences with configurable registration
 
-## 🚀 Live Demo
+## 🚀 Live Demo!
 
 Try it out: [Demo Link](#) *(Coming Soon)*
 
